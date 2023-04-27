@@ -58,8 +58,7 @@ async fn main() -> AppResult<()> {
                 config.server.port(),
             )))
             .serve(app.into_make_service())
-            .await
-            .unwrap();
+            .await?;
         }
     }
 

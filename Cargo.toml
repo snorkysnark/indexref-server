@@ -12,6 +12,7 @@ members = [".", "entity", "migration"]
 tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
 
 axum = "0.6.17"
+hyper = "0.14.26"
 
 sea-orm = { version = "0.11.3", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls"] }
 libsqlite3-sys = { version = "0.24.2", features = ["bundled"] }

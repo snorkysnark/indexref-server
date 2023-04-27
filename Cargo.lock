@@ -1064,6 +1064,7 @@ dependencies = [
  "clap 4.2.4",
  "directories-next",
  "entity",
+ "hyper",
  "justerror",
  "libsqlite3-sys",
  "migration",

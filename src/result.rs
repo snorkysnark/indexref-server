@@ -10,6 +10,7 @@ pub enum AppError {
     IoErr(#[from] std::io::Error),
     JsonErr(#[from] serde_json::Error),
     TomlDeserializationErr(#[from] toml::de::Error),
+    ServerErr(#[from] hyper::Error),
 }
 
 pub type AppResult<T> = Result<T, AppError>;
