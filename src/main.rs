@@ -4,7 +4,7 @@ mod paths;
 mod result;
 
 use std::{
-    net::{SocketAddr, SocketAddrV4},
+    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
     path::Path,
 };
 
@@ -33,6 +33,8 @@ async fn get_nodes(db: State<DatabaseConnection>) -> AppResult<Json<Vec<node::Mo
     Ok(Json(node::Entity::find().all(&*db).await?))
 }
 
+const LOCALHOST: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
+
 #[tokio::main]
 async fn main() -> AppResult<()> {
     let cli = Cli::parse();
@@ -53,13 +55,10 @@ async fn main() -> AppResult<()> {
         Commands::Serve => {
             let app = Router::new().route("/nodes", get(get_nodes)).with_state(db);
 
-            axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
-                "127.0.0.1".parse().unwrap(),
-                3000,
-            )))
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
+            axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(LOCALHOST, 3000)))
+                .serve(app.into_make_service())
+                .await
+                .unwrap();
         }
     }
 
