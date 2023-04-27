@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use directories_next::ProjectDirs;
 
@@ -34,5 +37,9 @@ impl ProjectPaths {
 
     pub fn db_connection_string(&self) -> AppResult<String> {
         Ok(format!("sqlite://{}?mode=rwc", self.db_path.try_to_str()?))
+    }
+
+    pub fn config_path(&self) -> &Path {
+        &self.config_path
     }
 }

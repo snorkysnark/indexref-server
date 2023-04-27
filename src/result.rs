@@ -9,6 +9,7 @@ pub enum AppError {
     DbErr(#[from] sea_orm::DbErr),
     IoErr(#[from] std::io::Error),
     JsonErr(#[from] serde_json::Error),
+    TomlDeserializationErr(#[from] toml::de::Error),
 }
 
 pub type AppResult<T> = Result<T, AppError>;

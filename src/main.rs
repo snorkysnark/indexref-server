@@ -1,15 +1,14 @@
+mod config;
 mod ext;
 mod index;
 mod paths;
 mod result;
 
-use std::{
-    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
-    path::Path,
-};
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use axum::{extract::State, routing::get, Json, Router};
 use clap::{Parser, Subcommand};
+use config::AppConfig;
 use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection, EntityTrait};
 
@@ -40,25 +39,27 @@ async fn main() -> AppResult<()> {
     let cli = Cli::parse();
 
     tracing_subscriber::fmt().init();
+
     let paths = ProjectPaths::init("com", "snorkysnark", "Indexref-Server")?;
+    let config = AppConfig::load(paths.config_path())?;
+
     let db = Database::connect(paths.db_connection_string()?).await?;
     Migrator::up(&db, None).await?;
 
     match cli.command {
         Commands::Index => {
-            index::rebuild_index(
-                &db,
-                &Path::new("/home/lisk/Work/indexref/data/примеры данных/ChatExport"),
-            )
-            .await?;
+            index::rebuild_index(&db, &config.sources).await?;
         }
         Commands::Serve => {
             let app = Router::new().route("/nodes", get(get_nodes)).with_state(db);
 
-            axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(LOCALHOST, 3000)))
-                .serve(app.into_make_service())
-                .await
-                .unwrap();
+            axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
+                LOCALHOST,
+                config.server.port(),
+            )))
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
         }
     }
 
