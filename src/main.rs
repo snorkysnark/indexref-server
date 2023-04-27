@@ -1,50 +1,67 @@
+mod ext;
+mod index;
+mod paths;
 mod result;
 
 use std::{
-    fs,
     net::{SocketAddr, SocketAddrV4},
+    path::Path,
 };
 
 use axum::{extract::State, routing::get, Json, Router};
-use directories_next::ProjectDirs;
+use clap::{Parser, Subcommand};
+use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection, EntityTrait};
 
-use entity::prelude::*;
+use entity::node;
 use migration::{Migrator, MigratorTrait};
-use result::{path::TryToStr, AppError, AppResult};
+use result::AppResult;
 
-type NodeModel = <Node as EntityTrait>::Model;
+#[derive(Parser)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
 
-async fn get_nodes(db: State<DatabaseConnection>) -> AppResult<Json<Vec<NodeModel>>> {
-    Ok(Json(Node::find().all(&*db).await?))
+#[derive(Subcommand)]
+enum Commands {
+    Index,
+    Serve,
+}
+
+async fn get_nodes(db: State<DatabaseConnection>) -> AppResult<Json<Vec<node::Model>>> {
+    Ok(Json(node::Entity::find().all(&*db).await?))
 }
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
+    let cli = Cli::parse();
+
     tracing_subscriber::fmt().init();
-
-    let dirs = ProjectDirs::from("com", "snorkysnark", "Indexref-Server")
-        .ok_or(AppError::ProjectDirsNotFound)?;
-
-    let data_dir = dirs.data_dir();
-    fs::create_dir_all(data_dir)?;
-
-    let db = Database::connect(format!(
-        "sqlite://{}?mode=rwc",
-        data_dir.join("index.db").try_to_str()?,
-    ))
-    .await?;
+    let paths = ProjectPaths::init("com", "snorkysnark", "Indexref-Server")?;
+    let db = Database::connect(paths.db_connection_string()?).await?;
     Migrator::up(&db, None).await?;
 
-    let app = Router::new().route("/nodes", get(get_nodes)).with_state(db);
+    match cli.command {
+        Commands::Index => {
+            index::rebuild_index(
+                &db,
+                &Path::new("/home/lisk/Work/indexref/data/примеры данных/ChatExport"),
+            )
+            .await?;
+        }
+        Commands::Serve => {
+            let app = Router::new().route("/nodes", get(get_nodes)).with_state(db);
 
-    axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
-        "127.0.0.1".parse().unwrap(),
-        3000,
-    )))
-    .serve(app.into_make_service())
-    .await
-    .unwrap();
+            axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
+                "127.0.0.1".parse().unwrap(),
+                3000,
+            )))
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
+        }
+    }
 
     Ok(())
 }

@@ -1,5 +1,3 @@
-pub mod path;
-
 use std::path::PathBuf;
 
 use axum::{http::StatusCode, response::IntoResponse};
@@ -10,6 +8,7 @@ pub enum AppError {
     NonUtf8Path(PathBuf),
     DbErr(#[from] sea_orm::DbErr),
     IoErr(#[from] std::io::Error),
+    JsonErr(#[from] serde_json::Error),
 }
 
 pub type AppResult<T> = Result<T, AppError>;
