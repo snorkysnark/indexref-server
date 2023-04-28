@@ -44,6 +44,7 @@ pub struct ChatMetadata {
 
 #[derive(Debug, Deserialize)]
 pub struct Message {
+    pub id: i64,
     pub date: String,
     pub date_unixtime: String,
     pub text_entities: Vec<TextEntity>,

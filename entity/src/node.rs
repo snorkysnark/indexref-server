@@ -14,6 +14,8 @@ pub struct Model {
     pub url: Option<String>,
     #[serde(with = "human_readable_opt")]
     pub created: Option<DateTimeUtc>,
+    pub file: Option<String>,
+    pub original_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -33,12 +33,14 @@ async fn insert_one(
         }
     });
     let created = Utc.datetime_from_str(&message.parsed.date, "%Y-%m-%dT%H:%M:%S")?;
+    let message_id = message.parsed.id.to_string();
 
     let inserted_node = node::ActiveModel {
         r#type: Set("Telegram".to_owned()),
         title: Set(Some(full_text)),
         url: Set(url),
         created: Set(Some(created)),
+        original_id: Set(Some(message_id)),
         ..Default::default()
     }
     .insert(db)
