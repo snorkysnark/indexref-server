@@ -1,9 +1,18 @@
+use axum::{extract::State, Json};
 use sea_orm::{DatabaseConnection, EntityTrait};
 
 use crate::{config::SourcesConfig, result::AppResult};
 use entity::node;
 
 mod telegram;
+
+pub async fn get_nodes(db: &DatabaseConnection) -> AppResult<Vec<node::Model>> {
+    Ok(node::Entity::find().all(&*db).await?)
+}
+
+pub async fn get_nodes_handler(db: State<DatabaseConnection>) -> AppResult<Json<Vec<node::Model>>> {
+    Ok(Json(get_nodes(&*db).await?))
+}
 
 pub async fn rebuild_index(
     db: &DatabaseConnection,

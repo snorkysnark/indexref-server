@@ -7,13 +7,12 @@ mod result;
 
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{routing::get, Router};
 use clap::{Parser, Subcommand};
 use config::AppConfig;
 use paths::ProjectPaths;
-use sea_orm::{Database, DatabaseConnection, EntityTrait};
+use sea_orm::Database;
 
-use entity::node;
 use migration::{Migrator, MigratorTrait};
 use result::AppResult;
 
@@ -27,10 +26,6 @@ struct Cli {
 enum Commands {
     Index,
     Serve,
-}
-
-async fn get_nodes(db: State<DatabaseConnection>) -> AppResult<Json<Vec<node::Model>>> {
-    Ok(Json(node::Entity::find().all(&*db).await?))
 }
 
 const LOCALHOST: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
@@ -52,7 +47,9 @@ async fn main() -> AppResult<()> {
             index::rebuild_index(&db, &config.sources).await?;
         }
         Commands::Serve => {
-            let app = Router::new().route("/nodes", get(get_nodes)).with_state(db);
+            let app = Router::new()
+                .route("/nodes", get(index::get_nodes_handler))
+                .with_state(db);
 
             axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
                 LOCALHOST,
