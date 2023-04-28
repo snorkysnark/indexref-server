@@ -9,9 +9,9 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use axum::{routing::get, Router};
 use clap::{Parser, Subcommand};
-use config::AppConfig;
+use config::{AppConfig, SourcesConfig};
 use paths::ProjectPaths;
-use sea_orm::Database;
+use sea_orm::{Database, DatabaseConnection};
 
 use migration::{Migrator, MigratorTrait};
 use result::AppResult;
@@ -29,6 +29,12 @@ enum Commands {
 }
 
 const LOCALHOST: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
+
+#[derive(Debug, Clone)]
+pub struct AppState {
+    db: DatabaseConnection,
+    sources: SourcesConfig,
+}
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
@@ -49,7 +55,10 @@ async fn main() -> AppResult<()> {
         Commands::Serve => {
             let app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
-                .with_state(db);
+                .with_state(AppState {
+                    db,
+                    sources: config.sources,
+                });
 
             axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
                 LOCALHOST,

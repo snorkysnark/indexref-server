@@ -21,7 +21,7 @@ pub struct Model {
 }
 
 impl Model {
-    fn into_abs_path(self, base: &Path) -> ModelAbsPath {
+    pub fn into_abs_path(self, base: &Path) -> ModelAbsPath {
         ModelAbsPath {
             id: self.id,
             r#type: self.r#type,

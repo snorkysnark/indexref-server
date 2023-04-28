@@ -7,7 +7,7 @@ use serde::Deserialize;
 
 use crate::result::AppResult;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {
     pub sources: SourcesConfig,
     pub server: ServerConfig,
@@ -20,7 +20,7 @@ impl AppConfig {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SourcesConfig {
     telegram_chat: Option<PathBuf>,
 }
@@ -31,7 +31,7 @@ impl SourcesConfig {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ServerConfig {
     port: u16,
 }
