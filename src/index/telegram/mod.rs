@@ -2,6 +2,7 @@ mod raw;
 
 use std::{fs, path::Path};
 
+use chrono::{TimeZone, Utc};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 
@@ -24,9 +25,12 @@ async fn insert_one(
         .map(|entity| entity.text.as_str())
         .collect();
 
+    let created = Utc.datetime_from_str(&message.parsed.date, "%Y-%m-%dT%H:%M:%S")?;
+
     let inserted_node = node::ActiveModel {
         r#type: Set("Telegram".to_owned()),
         title: Set(Some(full_text)),
+        created: Set(Some(created)),
         ..Default::default()
     }
     .insert(db)

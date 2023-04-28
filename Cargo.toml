@@ -17,6 +17,8 @@ hyper = "0.14.26"
 sea-orm = { version = "0.11.3", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls"] }
 libsqlite3-sys = { version = "0.24.2", features = ["bundled"] }
 
+chrono = { version = "0.4.24", features = ["serde"] }
+
 entity = { path = "entity" }
 migration = { path = "migration" }
 

@@ -13,6 +13,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Node::Id).integer().not_null().primary_key())
                     .col(ColumnDef::new(Node::Type).string().not_null())
                     .col(ColumnDef::new(Node::Title).string())
+                    .col(ColumnDef::new(Node::Url).string())
+                    .col(ColumnDef::new(Node::Created).string())
                     .to_owned(),
             )
             .await?;
@@ -36,4 +38,6 @@ enum Node {
     Id,
     Type,
     Title,
+    Url,
+    Created,
 }
