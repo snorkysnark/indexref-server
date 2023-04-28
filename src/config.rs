@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use paste::paste;
 use serde::Deserialize;
 
 use crate::result::AppResult;
@@ -25,10 +26,30 @@ pub struct SourcesConfig {
     telegram_chat: Option<PathBuf>,
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigError {
+    #[error("Missing value in config: {0}")]
+    MissingValue(&'static str),
+}
+
+macro_rules! config_getter {
+    ($name:ident, $field:ident) => {
+        #[allow(dead_code)]
+        pub fn $name(&self) -> Option<&Path> {
+            self.$field.as_deref()
+        }
+
+        paste! {
+            #[allow(dead_code)]
+            pub fn [<$name _ok>](&self) -> Result<&Path, ConfigError> {
+                self.$field.as_deref().ok_or(ConfigError::MissingValue(stringify!($field)))
+            }
+        }
+    };
+}
+
 impl SourcesConfig {
-    pub fn telegram_chat(&self) -> Option<&Path> {
-        self.telegram_chat.as_deref()
-    }
+    config_getter!(telegram_chat, telegram_chat);
 }
 
 #[derive(Debug, Clone, Deserialize)]

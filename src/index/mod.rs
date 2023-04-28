@@ -10,20 +10,19 @@ pub async fn get_nodes(
     db: &DatabaseConnection,
     sources: &SourcesConfig,
 ) -> AppResult<Vec<node::ModelAbsPath>> {
-    let nodes: Vec<_> = node::Entity::find()
-        .all(&*db)
+    let nodes: AppResult<Vec<_>> = node::Entity::find()
+        .all(db)
         .await?
         .into_iter()
         .map(|node| {
-            // TODO: replace unwrap with proper error
             let base_path = match node.r#type {
-                NodeType::Telegram => sources.telegram_chat().unwrap(),
+                NodeType::Telegram => sources.telegram_chat_ok()?,
             };
-            node.into_abs_path(base_path)
+            Ok(node.into_abs_path(base_path))
         })
         .collect();
 
-    Ok(nodes)
+    Ok(nodes?)
 }
 
 pub async fn get_nodes_handler(state: State<AppState>) -> AppResult<Json<Vec<node::ModelAbsPath>>> {

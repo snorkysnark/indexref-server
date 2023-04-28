@@ -1074,6 +1074,7 @@ dependencies = [
  "justerror",
  "libsqlite3-sys",
  "migration",
+ "paste",
  "pathdiff",
  "relative-path",
  "sea-orm",

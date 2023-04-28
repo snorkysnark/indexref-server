@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use axum::{http::StatusCode, response::IntoResponse};
 
-use crate::path_convert::PathConvertError;
+use crate::{path_convert::PathConvertError, config::ConfigError};
 
 #[justerror::Error]
 pub enum AppError {
@@ -14,7 +14,8 @@ pub enum AppError {
     TomlDeserializationErr(#[from] toml::de::Error),
     DateParseErr(#[from] chrono::ParseError),
     ServerErr(#[from] hyper::Error),
-    PathConvertErr(#[from] PathConvertError)
+    PathConvertErr(#[from] PathConvertError),
+    ConfigErr(#[from] ConfigError),
 }
 
 pub type AppResult<T> = Result<T, AppError>;

@@ -38,3 +38,5 @@ toml = "0.7.3"
 clap = { version = "4.2.4", features = ["derive"] }
 relative-path = { version = "1.8.0", features = ["serde"] }
 pathdiff = "0.2.1"
+
+paste = "1.0.12"
