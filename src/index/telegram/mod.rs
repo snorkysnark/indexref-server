@@ -13,7 +13,7 @@ use crate::{
     path_convert::ToRelativePath,
     result::AppResult,
 };
-use entity::{node, telegram};
+use entity::{node, telegram, types::NodeType};
 
 async fn insert_one(
     db: &DatabaseConnection,
@@ -39,7 +39,7 @@ async fn insert_one(
     let message_id = message.parsed.id.to_string();
 
     let inserted_node = node::ActiveModel {
-        r#type: Set("Telegram".to_owned()),
+        r#type: Set(NodeType::Telegram),
         title: Set(Some(full_text)),
         url: Set(url),
         created: Set(Some(created)),

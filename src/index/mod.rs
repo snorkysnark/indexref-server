@@ -2,7 +2,7 @@ use axum::{extract::State, Json};
 use sea_orm::{DatabaseConnection, EntityTrait};
 
 use crate::{config::SourcesConfig, result::AppResult, AppState};
-use entity::node;
+use entity::{node, types::NodeType};
 
 mod telegram;
 
@@ -15,10 +15,9 @@ pub async fn get_nodes(
         .await?
         .into_iter()
         .map(|node| {
-            // TODO: turn node.type into an enum, replace unwrap with proper error
-            let base_path = match node.r#type.as_str() {
-                "Telegram" => sources.telegram_chat().unwrap(),
-                _ => unreachable!(),
+            // TODO: replace unwrap with proper error
+            let base_path = match node.r#type {
+                NodeType::Telegram => sources.telegram_chat().unwrap(),
             };
             node.into_abs_path(base_path)
         })

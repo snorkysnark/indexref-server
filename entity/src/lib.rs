@@ -5,5 +5,5 @@ pub mod prelude;
 pub mod node;
 pub mod telegram;
 
-pub mod relative_path;
+pub mod types;
 pub mod date_serializer;
