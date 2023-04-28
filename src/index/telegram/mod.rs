@@ -3,12 +3,14 @@ mod raw;
 use std::{fs, path::Path};
 
 use chrono::{TimeZone, Utc};
+use relative_path::RelativePathBuf;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 
 use self::raw::{Chat, ChatMetadata, Message, ParsedAndRaw};
 use crate::{
     ext::{PathExt, ResultExt},
+    path_convert::ToRelativePath,
     result::AppResult,
 };
 use entity::{node, telegram};
@@ -16,6 +18,7 @@ use entity::{node, telegram};
 async fn insert_one(
     db: &DatabaseConnection,
     metadata: ChatMetadata,
+    relative_path: RelativePathBuf,
     message: ParsedAndRaw<Message>,
 ) -> AppResult<node::Model> {
     let full_text: String = message
@@ -40,6 +43,7 @@ async fn insert_one(
         title: Set(Some(full_text)),
         url: Set(url),
         created: Set(Some(created)),
+        file: Set(Some(relative_path.into())),
         original_id: Set(Some(message_id)),
         ..Default::default()
     }
@@ -70,6 +74,8 @@ pub async fn insert_from_file(
         .filter_map(|result| result.ok_log_errors())
         .filter(|e| matches!(e.path().extension_str(), Some("json")))
     {
+        let relative_path = entry.path().to_relative_path(folder)?;
+
         let chat: Chat = serde_json::from_str(&fs::read_to_string(entry.path())?)?;
         for message in chat.messages {
             // Skip non-text messages (may change in the future)
@@ -77,7 +83,8 @@ pub async fn insert_from_file(
                 continue;
             }
 
-            inserted_nodes.push(insert_one(db, chat.metadata.clone(), message).await?);
+            inserted_nodes
+                .push(insert_one(db, chat.metadata.clone(), relative_path.clone(), message).await?);
         }
     }
 

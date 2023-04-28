@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use axum::{http::StatusCode, response::IntoResponse};
 
+use crate::path_convert::PathConvertError;
+
 #[justerror::Error]
 pub enum AppError {
     ProjectDirsNotFound,
@@ -12,6 +14,7 @@ pub enum AppError {
     TomlDeserializationErr(#[from] toml::de::Error),
     DateParseErr(#[from] chrono::ParseError),
     ServerErr(#[from] hyper::Error),
+    PathConvertErr(#[from] PathConvertError)
 }
 
 pub type AppResult<T> = Result<T, AppError>;
