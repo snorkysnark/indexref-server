@@ -51,5 +51,8 @@ pub struct Message {
 
 #[derive(Debug, Deserialize)]
 pub struct TextEntity {
+    pub r#type: String,
     pub text: String,
+    #[serde(default)]
+    pub href: Option<String>,
 }

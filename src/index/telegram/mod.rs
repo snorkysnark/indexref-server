@@ -25,11 +25,19 @@ async fn insert_one(
         .map(|entity| entity.text.as_str())
         .collect();
 
+    let url = message.parsed.text_entities.iter().find_map(|block| {
+        if block.r#type == "link" {
+            Some(block.text.clone())
+        } else {
+            block.href.clone()
+        }
+    });
     let created = Utc.datetime_from_str(&message.parsed.date, "%Y-%m-%dT%H:%M:%S")?;
 
     let inserted_node = node::ActiveModel {
         r#type: Set("Telegram".to_owned()),
         title: Set(Some(full_text)),
+        url: Set(url),
         created: Set(Some(created)),
         ..Default::default()
     }
