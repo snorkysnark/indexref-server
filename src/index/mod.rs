@@ -41,10 +41,11 @@ pub async fn rebuild_index(
     let mut inserted_nodes = vec![];
 
     if let Some(telegram_chat) = sources.telegram_chat() {
-        inserted_nodes.append(&mut self::telegram::insert_from_file(db, telegram_chat).await?);
+        inserted_nodes.append(&mut self::telegram::insert_from_folder(db, telegram_chat).await?);
     }
     if let Some(single_file_z) = sources.single_file_z() {
-        inserted_nodes.append(&mut self::single_file_z::insert_from_file(db, single_file_z).await?);
+        inserted_nodes
+            .append(&mut self::single_file_z::insert_from_folder(db, single_file_z).await?);
     }
 
     Ok(inserted_nodes)

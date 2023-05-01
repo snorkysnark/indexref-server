@@ -15,7 +15,7 @@ use crate::{
 };
 use entity::{node, telegram, types::NodeType};
 
-async fn insert_one(
+async fn insert_message(
     db: &DatabaseConnection,
     metadata: ChatMetadata,
     relative_path: RelativePathBuf,
@@ -63,7 +63,7 @@ async fn insert_one(
     Ok(inserted_node)
 }
 
-pub async fn insert_from_file(
+pub async fn insert_from_folder(
     db: &DatabaseConnection,
     folder: &Path,
 ) -> AppResult<Vec<node::Model>> {
@@ -83,8 +83,9 @@ pub async fn insert_from_file(
                 continue;
             }
 
-            inserted_nodes
-                .push(insert_one(db, chat.metadata.clone(), relative_path.clone(), message).await?);
+            inserted_nodes.push(
+                insert_message(db, chat.metadata.clone(), relative_path.clone(), message).await?,
+            );
         }
     }
 

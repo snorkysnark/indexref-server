@@ -11,7 +11,7 @@ use crate::{
 };
 use entity::{node, types::NodeType};
 
-pub async fn insert_from_file(
+pub async fn insert_from_folder(
     db: &DatabaseConnection,
     folder: &Path,
 ) -> AppResult<Vec<node::Model>> {
@@ -43,6 +43,8 @@ pub async fn insert_from_file(
             .next()
             .and_then(|el| el.value().attr("href"))
             .map(|str| str.to_owned());
+
+        // TODO: Extract date from filename
 
         let inserted = node::ActiveModel {
             r#type: Set(NodeType::SingleFileZ),
