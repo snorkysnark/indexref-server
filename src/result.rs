@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use axum::{http::StatusCode, response::IntoResponse};
 
-use crate::{path_convert::PathConvertError, config::ConfigError};
+use crate::{config::ConfigError, path_convert::PathConvertError};
 
 #[justerror::Error]
 pub enum AppError {

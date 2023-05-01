@@ -24,6 +24,7 @@ impl AppConfig {
 #[derive(Debug, Clone, Deserialize)]
 pub struct SourcesConfig {
     telegram_chat: Option<PathBuf>,
+    single_file_z: Option<PathBuf>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -33,15 +34,15 @@ pub enum ConfigError {
 }
 
 macro_rules! config_getter {
-    ($name:ident, $field:ident) => {
+    ($field:ident) => {
         #[allow(dead_code)]
-        pub fn $name(&self) -> Option<&Path> {
+        pub fn $field(&self) -> Option<&Path> {
             self.$field.as_deref()
         }
 
         paste! {
             #[allow(dead_code)]
-            pub fn [<$name _ok>](&self) -> Result<&Path, ConfigError> {
+            pub fn [<$field _ok>](&self) -> Result<&Path, ConfigError> {
                 self.$field.as_deref().ok_or(ConfigError::MissingValue(stringify!($field)))
             }
         }
@@ -49,7 +50,8 @@ macro_rules! config_getter {
 }
 
 impl SourcesConfig {
-    config_getter!(telegram_chat, telegram_chat);
+    config_getter!(telegram_chat);
+    config_getter!(single_file_z);
 }
 
 #[derive(Debug, Clone, Deserialize)]
