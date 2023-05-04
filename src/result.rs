@@ -16,6 +16,7 @@ pub enum AppError {
     ServerErr(#[from] hyper::Error),
     PathConvertErr(#[from] PathConvertError),
     ConfigErr(#[from] ConfigError),
+    IdNotFound { table: &'static str, id: i32 },
 }
 
 pub type AppResult<T> = Result<T, AppError>;

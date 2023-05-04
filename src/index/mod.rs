@@ -2,8 +2,11 @@ use axum::{extract::State, Json};
 use sea_orm::{DatabaseConnection, EntityTrait};
 
 use crate::{config::SourcesConfig, result::AppResult, AppState};
-use entity::{node, types::NodeType};
+use entity::node;
 
+pub use self::node_data::{get_node_full, get_node_full_handler};
+
+mod node_data;
 mod single_file_z;
 mod telegram;
 
@@ -16,10 +19,7 @@ pub async fn get_nodes(
         .await?
         .into_iter()
         .map(|node| {
-            let base_path = match node.r#type {
-                NodeType::Telegram => sources.telegram_chat_ok()?,
-                NodeType::SingleFileZ => sources.single_file_z_ok()?,
-            };
+            let base_path = sources.get_base_path(node.r#type)?;
             Ok(node.into_abs_path(base_path))
         })
         .collect();

@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use entity::types::NodeType;
 use paste::paste;
 use serde::Deserialize;
 
@@ -52,6 +53,13 @@ macro_rules! config_getter {
 impl SourcesConfig {
     config_getter!(telegram_chat);
     config_getter!(single_file_z);
+
+    pub fn get_base_path(&self, node_type: NodeType) -> Result<&Path, ConfigError> {
+        match node_type {
+            NodeType::Telegram => self.telegram_chat_ok(),
+            NodeType::SingleFileZ => self.single_file_z_ok(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]

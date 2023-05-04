@@ -69,6 +69,7 @@ async fn main() -> AppResult<()> {
         Commands::Serve => {
             let app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
+                .route("/node/:id", get(index::get_node_full_handler))
                 .with_state(AppState {
                     db,
                     sources: config.sources,
