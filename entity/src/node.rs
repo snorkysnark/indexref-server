@@ -7,6 +7,7 @@ use crate::{
     types::{NodeType, RelativePathSql},
 };
 use sea_orm::entity::prelude::*;
+use chrono::naive::NaiveDateTime;
 use serde::Serialize;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize)]
@@ -18,7 +19,7 @@ pub struct Model {
     pub title: Option<String>,
     pub url: Option<String>,
     #[serde(with = "human_readable_opt")]
-    pub created: Option<DateTimeUtc>,
+    pub created: Option<NaiveDateTime>,
     pub file: Option<RelativePathSql>,
     pub original_id: Option<String>,
 }
@@ -44,7 +45,7 @@ pub struct ModelAbsPath {
     pub title: Option<String>,
     pub url: Option<String>,
     #[serde(with = "human_readable_opt")]
-    pub created: Option<DateTimeUtc>,
+    pub created: Option<NaiveDateTime>,
     pub file: Option<PathBuf>,
     pub original_id: Option<String>,
 }

@@ -21,6 +21,7 @@ pub async fn serve_file_handler(
     let node_type = match type_name.as_str() {
         "telegram" => NodeType::Telegram,
         "single_file_z" => NodeType::SingleFileZ,
+        "scrapbook" => NodeType::ScrapbookPage,
         _ => return Err(AppError::UnknownBaseFolder(type_name)),
     };
 

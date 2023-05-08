@@ -18,6 +18,7 @@ pub enum AppError {
     ConfigErr(#[from] ConfigError),
     IdNotFound { table: &'static str, id: i32 },
     UnknownBaseFolder(String),
+    XmlError(String),
 }
 
 pub type AppResult<T> = Result<T, AppError>;

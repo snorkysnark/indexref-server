@@ -22,7 +22,7 @@ pub struct NodeExpanded<M> {
 #[serde(untagged)]
 pub enum NodeData {
     Telegram(telegram::Model),
-    SingleFileZ,
+    Empty,
 }
 
 pub async fn get_node_full(
@@ -43,7 +43,7 @@ pub async fn get_node_full(
                 },
             )?)
         }
-        NodeType::SingleFileZ => NodeData::SingleFileZ,
+        _ => NodeData::Empty,
     };
 
     let base_path = sources.get_base_path(node_model.r#type)?;

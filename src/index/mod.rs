@@ -7,8 +7,9 @@ use entity::node;
 pub use self::node_data::{get_node_full, get_node_full_handler};
 pub use self::serve_file::*;
 
-mod serve_file;
 mod node_data;
+mod scrapbook;
+mod serve_file;
 mod single_file_z;
 mod telegram;
 
@@ -48,6 +49,9 @@ pub async fn rebuild_index(
     if let Some(single_file_z) = sources.single_file_z() {
         inserted_nodes
             .append(&mut self::single_file_z::insert_from_folder(db, single_file_z).await?);
+    }
+    if let Some(scrapbook) = sources.scrapbook() {
+        inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
     }
 
     Ok(inserted_nodes)

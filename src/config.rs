@@ -26,6 +26,7 @@ impl AppConfig {
 pub struct SourcesConfig {
     telegram_chat: Option<PathBuf>,
     single_file_z: Option<PathBuf>,
+    scrapbook: Option<PathBuf>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -53,11 +54,13 @@ macro_rules! config_getter {
 impl SourcesConfig {
     config_getter!(telegram_chat);
     config_getter!(single_file_z);
+    config_getter!(scrapbook);
 
     pub fn get_base_path(&self, node_type: NodeType) -> Result<&Path, ConfigError> {
         match node_type {
             NodeType::Telegram => self.telegram_chat_ok(),
             NodeType::SingleFileZ => self.single_file_z_ok(),
+            NodeType::ScrapbookFile | NodeType::ScrapbookPage => self.scrapbook_ok(),
         }
     }
 }

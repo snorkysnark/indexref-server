@@ -8,4 +8,8 @@ pub enum NodeType {
     Telegram,
     #[sea_orm(string_value = "SingleFileZ")]
     SingleFileZ,
+    #[sea_orm(string_value = "ScrapbookPage")]
+    ScrapbookPage,
+    #[sea_orm(string_value = "ScrapbookFile")]
+    ScrapbookFile,
 }

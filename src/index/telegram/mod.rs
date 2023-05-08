@@ -2,7 +2,7 @@ mod raw;
 
 use std::{fs, path::Path};
 
-use chrono::{TimeZone, Utc};
+use chrono::NaiveDateTime;
 use relative_path::RelativePathBuf;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
@@ -35,7 +35,7 @@ async fn insert_message(
             block.href.clone()
         }
     });
-    let created = Utc.datetime_from_str(&message.parsed.date, "%Y-%m-%dT%H:%M:%S")?;
+    let created = NaiveDateTime::parse_from_str(&message.parsed.date, "%Y-%m-%dT%H:%M:%S")?;
     let message_id = message.parsed.id.to_string();
 
     let inserted_node = node::ActiveModel {
