@@ -2,12 +2,12 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use entity::{node, telegram, types::NodeType};
 use sea_orm::{DatabaseConnection, EntityTrait};
 use serde::Serialize;
 
 use crate::{
     config::SourcesConfig,
+    entity::{node, telegram, types::NodeType},
     result::{AppError, AppResult},
     AppState,
 };

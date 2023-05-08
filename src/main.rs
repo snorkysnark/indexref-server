@@ -4,6 +4,7 @@ mod index;
 mod path_convert;
 mod paths;
 mod result;
+mod entity;
 
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 

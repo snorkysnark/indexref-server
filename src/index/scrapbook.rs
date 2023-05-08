@@ -12,11 +12,11 @@ use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
 
 use crate::{
+    entity::{node, types::NodeType},
     ext::ResultExt,
     path_convert::ToRelativePath,
     result::{AppError, AppResult},
 };
-use entity::{node, types::NodeType};
 
 #[derive(Debug, YaDeserialize)]
 #[yaserde(

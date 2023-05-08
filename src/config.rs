@@ -3,11 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use entity::types::NodeType;
 use paste::paste;
 use serde::Deserialize;
 
-use crate::result::AppResult;
+use crate::{entity::types::NodeType, result::AppResult};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {

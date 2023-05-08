@@ -5,11 +5,11 @@ use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 
 use crate::{
+    entity::{node, types::NodeType},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
     result::AppResult,
 };
-use entity::{node, types::NodeType};
 
 pub async fn insert_from_folder(
     db: &DatabaseConnection,

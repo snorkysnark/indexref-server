@@ -1,8 +1,7 @@
 use axum::{extract::State, Json};
 use sea_orm::{DatabaseConnection, EntityTrait};
 
-use crate::{config::SourcesConfig, result::AppResult, AppState};
-use entity::node;
+use crate::{config::SourcesConfig, entity::node, result::AppResult, AppState};
 
 pub use self::node_data::{get_node_full, get_node_full_handler};
 pub use self::serve_file::*;

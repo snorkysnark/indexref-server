@@ -9,11 +9,11 @@ use walkdir::WalkDir;
 
 use self::raw::{Chat, ChatMetadata, Message, ParsedAndRaw};
 use crate::{
+    entity::{node, telegram, types::NodeType},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
     result::AppResult,
 };
-use entity::{node, telegram, types::NodeType};
 
 async fn insert_message(
     db: &DatabaseConnection,
