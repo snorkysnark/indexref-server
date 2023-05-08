@@ -1,6 +1,12 @@
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use chrono::{DateTime, Local};
+use once_cell::sync::Lazy;
+use regex::Regex;
+use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
@@ -44,6 +50,22 @@ struct RdfDescription {
     source: String,
 }
 
+fn extract_redirect_path(index_html_path: &Path) -> std::io::Result<Option<PathBuf>> {
+    static SELECT_META: Lazy<Selector> = Lazy::new(|| Selector::parse("meta").unwrap());
+    static REGEX_CONTENT: Lazy<Regex> = Lazy::new(|| Regex::new(r"0;URL=(.+)").unwrap());
+
+    let document = Html::parse_document(&fs::read_to_string(index_html_path)?);
+
+    Ok(document
+        .select(&*SELECT_META)
+        .next()
+        .and_then(|el| el.value().attr("content"))
+        .and_then(|content| REGEX_CONTENT.captures_iter(content).next())
+        .and_then(|captures| captures.get(1))
+        .map(|matched| Path::new(matched.as_str()))
+        .map(|redirect| index_html_path.parent().unwrap().join(redirect)))
+}
+
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
     folder: &Path,
@@ -67,18 +89,25 @@ pub async fn insert_from_folder(
                 _ => continue,
             };
 
-            let file_path = scrapbook_root
+            let index_html_path = scrapbook_root
                 .join("data")
                 .join(&description.id)
                 .join("index.html");
 
-            let metadata = fs::metadata(&file_path).ok();
+            let metadata = fs::metadata(&index_html_path).ok();
             let created = metadata
                 // For some reason, meta.created() returns the time the file was appeared in THIS
                 // filesystem (and not where it originated)
                 // meta.modified() returns the correct date
                 .and_then(|meta| meta.modified().ok())
                 .map(|time| DateTime::<Local>::from(time).naive_local());
+
+            // For file nodes, the actual file path is found in index.html's redirect
+            let file_path = match node_type {
+                NodeType::ScrapbookFile => extract_redirect_path(&index_html_path)?,
+                _ => None,
+            }
+            .unwrap_or(index_html_path);
 
             let rel_path = file_path.to_relative_path(folder)?;
 
