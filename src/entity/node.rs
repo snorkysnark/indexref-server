@@ -6,8 +6,8 @@ use super::{
     date_serializer::human_readable_opt,
     types::{NodeType, RelativePathSql},
 };
-use sea_orm::entity::prelude::*;
 use chrono::naive::NaiveDateTime;
+use sea_orm::entity::prelude::*;
 use serde::Serialize;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize)]
@@ -32,7 +32,15 @@ impl Model {
             title: self.title,
             url: self.url,
             created: self.created,
-            file: self.file.map(|rel_path| rel_path.0.to_path(base)),
+            file: self.file.as_ref().map(|rel_path| rel_path.0.to_path(base)),
+            file_proxy: self.file.as_ref().map(|rel_path| {
+                // Construct relative url
+                ["files", self.r#type.container_type().url_name()]
+                    .into_iter()
+                    .chain(rel_path.0.components().map(|component| component.as_str()))
+                    .map(|segment| format!("/{}", urlencoding::encode(segment)))
+                    .collect()
+            }),
             original_id: self.original_id,
         }
     }
@@ -47,6 +55,7 @@ pub struct ModelAbsPath {
     #[serde(with = "human_readable_opt")]
     pub created: Option<NaiveDateTime>,
     pub file: Option<PathBuf>,
+    pub file_proxy: Option<String>,
     pub original_id: Option<String>,
 }
 
