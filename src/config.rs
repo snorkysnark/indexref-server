@@ -1,5 +1,6 @@
-use std::{fs, path::Path};
+use std::path::Path;
 
+use fs_err as fs;
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]

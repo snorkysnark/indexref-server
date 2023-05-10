@@ -1,8 +1,9 @@
-use std::{fs, path::Path};
+use std::path::Path;
 
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
+use fs_err as fs;
 
 use crate::{
     entity::{node, types::NodeType},

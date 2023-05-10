@@ -40,7 +40,7 @@ async fn serve_file(
 
     let mime = mime_guess::from_path(&full_path).first_or_text_plain();
 
-    let file = tokio::fs::File::open(&full_path).await?;
+    let file = fs_err::tokio::File::open(&full_path).await?;
     let stream = ReaderStream::new(file);
     let body = StreamBody::new(stream);
 

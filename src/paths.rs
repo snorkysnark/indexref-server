@@ -1,10 +1,8 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use directories_next::ProjectDirs;
 use eyre::ContextCompat;
+use fs_err as fs;
 
 use crate::ext::PathExt;
 

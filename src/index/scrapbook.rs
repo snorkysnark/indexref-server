@@ -1,7 +1,4 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Local};
 use eyre::{eyre, ContextCompat};
@@ -12,6 +9,7 @@ use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use url::Url;
 use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
+use fs_err as fs;
 
 use crate::{
     entity::{node, types::NodeType},
