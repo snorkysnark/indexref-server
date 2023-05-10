@@ -1,12 +1,6 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::Path};
 
-use paste::paste;
 use serde::Deserialize;
-
-use crate::entity::types::NodeType;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {
@@ -22,49 +16,6 @@ impl AppConfig {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct SourcesConfig {
-    telegram_chat: Option<PathBuf>,
-    single_file_z: Option<PathBuf>,
-    scrapbook: Option<PathBuf>,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum BasePathError {
-    #[error("Value '{0}' is missing in config, yet nodes of this type exist in the database")]
-    MissingValue(&'static str),
-}
-
-macro_rules! config_getter {
-    ($field:ident) => {
-        #[allow(dead_code)]
-        pub fn $field(&self) -> Option<&Path> {
-            self.$field.as_deref()
-        }
-
-        paste! {
-            #[allow(dead_code)]
-            pub fn [<$field _ok>](&self) -> Result<&Path, BasePathError> {
-                self.$field.as_deref().ok_or(BasePathError::MissingValue(stringify!($field)))
-            }
-        }
-    };
-}
-
-impl SourcesConfig {
-    config_getter!(telegram_chat);
-    config_getter!(single_file_z);
-    config_getter!(scrapbook);
-
-    pub fn get_base_path(&self, node_type: NodeType) -> Result<&Path, BasePathError> {
-        match node_type {
-            NodeType::Telegram => self.telegram_chat_ok(),
-            NodeType::SingleFileZ => self.single_file_z_ok(),
-            NodeType::ScrapbookFile | NodeType::ScrapbookPage => self.scrapbook_ok(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
 pub struct ServerConfig {
     port: u16,
 }
@@ -72,5 +23,60 @@ pub struct ServerConfig {
 impl ServerConfig {
     pub fn port(&self) -> u16 {
         self.port
+    }
+}
+
+pub use self::sources::{BasePathError, SourcesConfig};
+mod sources {
+    use std::path::{Path, PathBuf};
+
+    use serde::Deserialize;
+
+    use crate::entity::types::ContainerType;
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub struct SourcesConfig {
+        telegram_chat: Option<PathBuf>,
+        single_file_z: Option<PathBuf>,
+        scrapbook: Option<PathBuf>,
+    }
+
+    #[derive(Debug, thiserror::Error)]
+    pub enum BasePathError {
+        #[error("Value '{0}' is missing in config, yet nodes of this type exist in the database")]
+        MissingValue(&'static str),
+    }
+
+    impl SourcesConfig {
+        pub fn get_base_path(&self, container_type: ContainerType) -> Result<&Path, BasePathError> {
+            macro_rules! config_value {
+                ($this:expr, $field:ident) => {
+                    $this
+                        .$field
+                        .as_deref()
+                        .ok_or(BasePathError::MissingValue(stringify!($field)))
+                };
+            }
+
+            Ok(match container_type {
+                ContainerType::Telegram => config_value!(self, telegram_chat)?,
+                ContainerType::SingleFileZ => config_value!(self, single_file_z)?,
+                ContainerType::Scrapbook => config_value!(self, scrapbook)?,
+            })
+        }
+    }
+
+    macro_rules! getter {
+        ($name:ident) => {
+            pub fn $name(&self) -> Option<&Path> {
+                self.$name.as_deref()
+            }
+        };
+    }
+
+    impl SourcesConfig {
+        getter!(telegram_chat);
+        getter!(single_file_z);
+        getter!(scrapbook);
     }
 }

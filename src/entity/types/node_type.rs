@@ -13,3 +13,20 @@ pub enum NodeType {
     #[sea_orm(string_value = "ScrapbookFile")]
     ScrapbookFile,
 }
+
+impl NodeType {
+    pub fn container_type(self) -> ContainerType {
+        match self {
+            NodeType::Telegram => ContainerType::Telegram,
+            NodeType::SingleFileZ => ContainerType::SingleFileZ,
+            NodeType::ScrapbookPage | NodeType::ScrapbookFile => ContainerType::Scrapbook,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ContainerType {
+    Telegram,
+    SingleFileZ,
+    Scrapbook,
+}

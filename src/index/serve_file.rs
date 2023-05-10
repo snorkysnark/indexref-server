@@ -35,7 +35,7 @@ async fn serve_file(
         _ => return Err(ServeFileError::UnknownContainerName(type_name)),
     };
 
-    let base_path = state.sources.get_base_path(node_type)?;
+    let base_path = state.sources.get_base_path(node_type.container_type())?;
     let full_path = rel_path.to_path(base_path);
 
     if full_path.is_dir() {

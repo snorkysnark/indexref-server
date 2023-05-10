@@ -23,7 +23,7 @@ pub async fn get_nodes(
         .await?
         .into_iter()
         .map(|node| {
-            let base_path = sources.get_base_path(node.r#type)?;
+            let base_path = sources.get_base_path(node.r#type.container_type())?;
             Ok(node.into_abs_path(base_path))
         })
         .collect();

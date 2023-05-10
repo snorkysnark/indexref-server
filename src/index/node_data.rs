@@ -60,7 +60,7 @@ pub async fn get_node_full(
         _ => NodeData::Empty,
     };
 
-    let base_path = sources.get_base_path(node_model.r#type)?;
+    let base_path = sources.get_base_path(node_model.r#type.container_type())?;
     Ok(NodeExpanded {
         node: node_model.into_abs_path(base_path),
         data: node_data,
