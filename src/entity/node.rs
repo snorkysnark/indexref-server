@@ -18,7 +18,7 @@ pub struct Model {
     pub r#type: NodeType,
     pub title: Option<String>,
     pub url: Option<String>,
-    #[serde(with = "human_readable_opt")]
+    #[serde(serialize_with = "human_readable_opt")]
     pub created: Option<NaiveDateTime>,
     pub file: Option<RelativePathSql>,
     pub original_id: Option<String>,
@@ -52,7 +52,7 @@ pub struct ModelAbsPath {
     pub r#type: NodeType,
     pub title: Option<String>,
     pub url: Option<String>,
-    #[serde(with = "human_readable_opt")]
+    #[serde(serialize_with = "human_readable_opt")]
     pub created: Option<NaiveDateTime>,
     pub file: Option<PathBuf>,
     pub file_proxy: Option<String>,
