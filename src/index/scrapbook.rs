@@ -4,11 +4,12 @@ use std::{
 };
 
 use chrono::{DateTime, Local};
-use eyre::eyre;
+use eyre::{eyre, ContextCompat};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use url::Url;
 use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
 
@@ -50,20 +51,36 @@ struct RdfDescription {
     source: String,
 }
 
-fn extract_redirect_path(index_html_path: &Path) -> std::io::Result<Option<PathBuf>> {
-    static SELECT_META: Lazy<Selector> = Lazy::new(|| Selector::parse("meta").unwrap());
+fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
+    static SELECT_META: Lazy<Selector> = Lazy::new(|| Selector::parse("meta[content]").unwrap());
     static REGEX_CONTENT: Lazy<Regex> = Lazy::new(|| Regex::new(r"0;URL=(.+)").unwrap());
 
     let document = Html::parse_document(&fs::read_to_string(index_html_path)?);
-
-    Ok(document
+    let content = document
         .select(&*SELECT_META)
         .next()
-        .and_then(|el| el.value().attr("content"))
-        .and_then(|content| REGEX_CONTENT.captures_iter(content).next())
-        .and_then(|captures| captures.get(1))
-        .map(|matched| Path::new(matched.as_str()))
-        .map(|redirect| index_html_path.parent().unwrap().join(redirect)))
+        .context("No meta tag in html")?
+        .value()
+        .attr("content")
+        .context("No content attribute")?;
+
+    let relative_url = REGEX_CONTENT
+        .captures_iter(content)
+        .next()
+        .with_context(|| format!("Unexpected content value: {content}"))?
+        .get(1)
+        .unwrap()
+        .as_str();
+
+    let index_html_url = Url::from_file_path(&index_html_path)
+        .map_err(|_| eyre!("Cannot convert path to URL: {}", index_html_path.display()))?;
+
+    let file_url = index_html_url.join(&relative_url)?;
+    let file_path = file_url
+        .to_file_path()
+        .map_err(|_| eyre!("Cannot convert back to file path: {file_url}"))?;
+
+    Ok(file_path)
 }
 
 pub async fn insert_from_folder(
@@ -105,9 +122,8 @@ pub async fn insert_from_folder(
             // For file nodes, the actual file path is found in index.html's redirect
             let file_path = match node_type {
                 NodeType::ScrapbookFile => extract_redirect_path(&index_html_path)?,
-                _ => None,
-            }
-            .unwrap_or(index_html_path);
+                _ => index_html_path,
+            };
 
             let rel_path = file_path.to_relative_path(folder)?;
 
