@@ -5,12 +5,14 @@ mod index;
 mod path_convert;
 mod paths;
 
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
+use std::{
+    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
+    process::exit,
+};
 
 use axum::{routing::get, Router};
 use clap::{Parser, Subcommand};
 use config::{AppConfig, SourcesConfig};
-use dialoguer::{theme::ColorfulTheme, Confirm};
 use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection};
 
@@ -36,6 +38,24 @@ pub struct AppState {
     sources: SourcesConfig,
 }
 
+async fn run_migrations(db: &DatabaseConnection) {
+    use dialoguer::{theme::ColorfulTheme, Confirm};
+
+    if let Err(err) = Migrator::up(db, None).await {
+        eprintln!("Migration failed: {err}");
+        if matches!(
+            Confirm::with_theme(&ColorfulTheme::default())
+                .with_prompt("Delete existing database?")
+                .interact(),
+            Ok(true)
+        ) {
+            let _ = Migrator::fresh(db).await;
+        } else {
+            exit(1);
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     let cli = Cli::parse();
@@ -47,20 +67,7 @@ async fn main() -> eyre::Result<()> {
     let config = AppConfig::load(paths.config_path())?;
 
     let db = Database::connect(paths.db_connection_string()?).await?;
-    match Migrator::up(&db, None).await {
-        Ok(_) => (),
-        Err(err) => {
-            eprintln!("Migration failed: {err}");
-            if Confirm::with_theme(&ColorfulTheme::default())
-                .with_prompt("Delete existing database?")
-                .interact()?
-            {
-                Migrator::fresh(&db).await?;
-            } else {
-                return Err(err.into());
-            }
-        }
-    }
+    run_migrations(&db).await;
 
     match cli.command {
         Commands::Index => {
