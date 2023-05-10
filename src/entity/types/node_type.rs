@@ -1,6 +1,8 @@
 use sea_orm::{DeriveActiveEnum, EnumIter};
 use serde::Serialize;
 
+use crate::macros::from_to_str;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "String(None)")]
 pub enum NodeType {
@@ -30,3 +32,14 @@ pub enum ContainerType {
     SingleFileZ,
     Scrapbook,
 }
+
+impl ContainerType {
+    from_to_str! {
+        pub url_name {
+            ContainerType::Telegram => "telegram",
+            ContainerType::SingleFileZ => "singlefile",
+            ContainerType::Scrapbook => "scrapbook",
+        }
+    }
+}
+

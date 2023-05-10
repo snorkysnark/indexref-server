@@ -4,6 +4,7 @@ mod ext;
 mod index;
 mod path_convert;
 mod paths;
+mod macros;
 
 use std::{
     net::{Ipv4Addr, SocketAddr, SocketAddrV4},
