@@ -1,7 +1,9 @@
+use axum::response::{IntoResponse, Response};
 use axum::{extract::State, Json};
+use hyper::StatusCode;
 use sea_orm::{DatabaseConnection, EntityTrait};
 
-use crate::{config::SourcesConfig, entity::node, result::AppResult, AppState};
+use crate::{config::SourcesConfig, entity::node, AppState};
 
 pub use self::node_data::{get_node_full, get_node_full_handler};
 pub use self::serve_file::*;
@@ -15,8 +17,8 @@ mod telegram;
 pub async fn get_nodes(
     db: &DatabaseConnection,
     sources: &SourcesConfig,
-) -> AppResult<Vec<node::ModelAbsPath>> {
-    let nodes: AppResult<Vec<_>> = node::Entity::find()
+) -> eyre::Result<Vec<node::ModelAbsPath>> {
+    let nodes: eyre::Result<Vec<_>> = node::Entity::find()
         .all(db)
         .await?
         .into_iter()
@@ -29,14 +31,17 @@ pub async fn get_nodes(
     Ok(nodes?)
 }
 
-pub async fn get_nodes_handler(state: State<AppState>) -> AppResult<Json<Vec<node::ModelAbsPath>>> {
-    Ok(Json(get_nodes(&state.db, &state.sources).await?))
+pub async fn get_nodes_handler(state: State<AppState>) -> Response {
+    match get_nodes(&state.db, &state.sources).await {
+        Ok(value) => Json(value).into_response(),
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response(),
+    }
 }
 
 pub async fn rebuild_index(
     db: &DatabaseConnection,
     sources: &SourcesConfig,
-) -> AppResult<Vec<node::Model>> {
+) -> eyre::Result<Vec<node::Model>> {
     // Clear existing index
     node::Entity::delete_many().exec(db).await?;
 

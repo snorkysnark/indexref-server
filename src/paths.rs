@@ -4,11 +4,9 @@ use std::{
 };
 
 use directories_next::ProjectDirs;
+use eyre::ContextCompat;
 
-use crate::{
-    ext::PathExt,
-    result::{AppError, AppResult},
-};
+use crate::ext::PathExt;
 
 pub struct ProjectPaths {
     #[allow(dead_code)]
@@ -18,9 +16,9 @@ pub struct ProjectPaths {
 }
 
 impl ProjectPaths {
-    pub fn init(qualifier: &str, organization: &str, application: &str) -> AppResult<Self> {
+    pub fn init(qualifier: &str, organization: &str, application: &str) -> eyre::Result<Self> {
         let dirs = ProjectDirs::from(qualifier, organization, application)
-            .ok_or(AppError::ProjectDirsNotFound)?;
+            .context("Project dirs not found")?;
 
         let data_dir = dirs.data_dir();
         let config_dir = dirs.config_dir();
@@ -35,7 +33,7 @@ impl ProjectPaths {
         })
     }
 
-    pub fn db_connection_string(&self) -> AppResult<String> {
+    pub fn db_connection_string(&self) -> eyre::Result<String> {
         Ok(format!("sqlite://{}?mode=rwc", self.db_path.try_to_str()?))
     }
 

@@ -4,6 +4,7 @@ use std::{
 };
 
 use chrono::{DateTime, Local};
+use eyre::eyre;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use scraper::{Html, Selector};
@@ -15,7 +16,6 @@ use crate::{
     entity::{node, types::NodeType},
     ext::ResultExt,
     path_convert::ToRelativePath,
-    result::{AppError, AppResult},
 };
 
 #[derive(Debug, YaDeserialize)]
@@ -69,7 +69,7 @@ fn extract_redirect_path(index_html_path: &Path) -> std::io::Result<Option<PathB
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
     folder: &Path,
-) -> AppResult<Vec<node::Model>> {
+) -> eyre::Result<Vec<node::Model>> {
     let mut inserted_nodes = vec![];
 
     for entry in WalkDir::new(folder)
@@ -80,7 +80,7 @@ pub async fn insert_from_folder(
         let scrapbook_root = entry.path().parent().unwrap();
 
         let rdf: Rdf = yaserde::de::from_str(&fs::read_to_string(entry.path())?)
-            .map_err(|err| AppError::XmlError(err))?;
+            .map_err(|err| eyre!("XML parse error: {err}"))?;
 
         for description in rdf.descriptions {
             let node_type = match description.r#type.as_str() {

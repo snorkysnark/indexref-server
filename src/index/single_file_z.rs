@@ -8,13 +8,12 @@ use crate::{
     entity::{node, types::NodeType},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
-    result::AppResult,
 };
 
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
     folder: &Path,
-) -> AppResult<Vec<node::Model>> {
+) -> eyre::Result<Vec<node::Model>> {
     let sel_title = Selector::parse("title").unwrap();
     let sel_canonical_link = Selector::parse(r#"link[rel="canonical"]"#).unwrap();
 

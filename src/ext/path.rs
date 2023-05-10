@@ -1,16 +1,16 @@
 use std::path::Path;
 
-use crate::result::{AppError, AppResult};
+use eyre::ContextCompat;
 
 pub trait PathExt {
-    fn try_to_str(&self) -> AppResult<&str>;
+    fn try_to_str(&self) -> eyre::Result<&str>;
     fn extension_str(&self) -> Option<&str>;
 }
 
 impl PathExt for Path {
-    fn try_to_str(&self) -> AppResult<&str> {
+    fn try_to_str(&self) -> eyre::Result<&str> {
         self.to_str()
-            .ok_or_else(|| AppError::NonUtf8Path(self.to_owned()))
+            .with_context(|| format!("Non-UTF8 path: {}", self.display()))
     }
 
     fn extension_str(&self) -> Option<&str> {

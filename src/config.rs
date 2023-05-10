@@ -6,7 +6,7 @@ use std::{
 use paste::paste;
 use serde::Deserialize;
 
-use crate::{entity::types::NodeType, result::AppResult};
+use crate::entity::types::NodeType;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {
@@ -15,7 +15,7 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-    pub fn load(path: &Path) -> AppResult<Self> {
+    pub fn load(path: &Path) -> eyre::Result<Self> {
         // TODO: custom FileNotFound error that prints the expected path
         Ok(toml::from_str(&fs::read_to_string(path)?)?)
     }
@@ -29,8 +29,8 @@ pub struct SourcesConfig {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ConfigError {
-    #[error("Missing value in config: {0}")]
+pub enum BasePathError {
+    #[error("Value '{0}' is missing in config, yet nodes of this type exist in the database")]
     MissingValue(&'static str),
 }
 
@@ -43,8 +43,8 @@ macro_rules! config_getter {
 
         paste! {
             #[allow(dead_code)]
-            pub fn [<$field _ok>](&self) -> Result<&Path, ConfigError> {
-                self.$field.as_deref().ok_or(ConfigError::MissingValue(stringify!($field)))
+            pub fn [<$field _ok>](&self) -> Result<&Path, BasePathError> {
+                self.$field.as_deref().ok_or(BasePathError::MissingValue(stringify!($field)))
             }
         }
     };
@@ -55,7 +55,7 @@ impl SourcesConfig {
     config_getter!(single_file_z);
     config_getter!(scrapbook);
 
-    pub fn get_base_path(&self, node_type: NodeType) -> Result<&Path, ConfigError> {
+    pub fn get_base_path(&self, node_type: NodeType) -> Result<&Path, BasePathError> {
         match node_type {
             NodeType::Telegram => self.telegram_chat_ok(),
             NodeType::SingleFileZ => self.single_file_z_ok(),

@@ -12,7 +12,6 @@ use crate::{
     entity::{node, telegram, types::NodeType},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
-    result::AppResult,
 };
 
 async fn insert_message(
@@ -20,7 +19,7 @@ async fn insert_message(
     metadata: ChatMetadata,
     relative_path: RelativePathBuf,
     message: ParsedAndRaw<Message>,
-) -> AppResult<node::Model> {
+) -> eyre::Result<node::Model> {
     let full_text: String = message
         .parsed
         .text_entities
@@ -66,7 +65,7 @@ async fn insert_message(
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
     folder: &Path,
-) -> AppResult<Vec<node::Model>> {
+) -> eyre::Result<Vec<node::Model>> {
     let mut inserted_nodes = vec![];
 
     for entry in WalkDir::new(folder)

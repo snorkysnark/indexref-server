@@ -1,10 +1,13 @@
 use std::path::{Path, PathBuf};
 
 use relative_path::RelativePathBuf;
+use thiserror::Error;
 
-#[justerror::Error]
+#[derive(Debug, Error)]
 pub enum PathConvertError {
+    #[error("Path diff failed: {path} - {base}")]
     PathDiffError { path: PathBuf, base: PathBuf },
+    #[error("{0}")]
     RelativePathError(#[from] relative_path::FromPathError),
 }
 

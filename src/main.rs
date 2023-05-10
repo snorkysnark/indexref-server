@@ -1,10 +1,9 @@
 mod config;
+mod entity;
 mod ext;
 mod index;
 mod path_convert;
 mod paths;
-mod result;
-mod entity;
 
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
@@ -16,7 +15,6 @@ use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection};
 
 use migration::{Migrator, MigratorTrait};
-use result::AppResult;
 
 #[derive(Parser)]
 struct Cli {
@@ -39,9 +37,10 @@ pub struct AppState {
 }
 
 #[tokio::main]
-async fn main() -> AppResult<()> {
+async fn main() -> eyre::Result<()> {
     let cli = Cli::parse();
 
+    color_eyre::install()?;
     tracing_subscriber::fmt().init();
 
     let paths = ProjectPaths::init("com", "snorkysnark", "Indexref-Server")?;
