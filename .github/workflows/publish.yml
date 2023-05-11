@@ -5,7 +5,9 @@ on:
       - release
 
 jobs:
-  build:
+  publish:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         - os: ubuntu-latest
@@ -18,7 +20,6 @@ jobs:
           artifact_name: indexref-server
           asset_name: indexref-server-macos-amd64
 
-    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
       - name: Build
