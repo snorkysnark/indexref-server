@@ -27,7 +27,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Rebuild the index
     Index,
+    /// Run local server
     Serve,
 }
 
