@@ -10,9 +10,9 @@
 **Example:**
 ```toml
 [sources]
-telegram_chat = "/home/lisk/Work/indexref/data/примеры данных/ChatExport"
-single_file_z = "/home/lisk/Work/indexref/data/примеры данных/SingleZ"
-scrapbook = "/home/lisk/Work/indexref/data/примеры данных/scrapbook"
+telegram_chat = '/home/lisk/Work/indexref/data/примеры данных/ChatExport'
+single_file_z = '/home/lisk/Work/indexref/data/примеры данных/SingleZ'
+scrapbook = '/home/lisk/Work/indexref/data/примеры данных/scrapbook'
 
 [server]
 port = 3200
