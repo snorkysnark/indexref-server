@@ -4,7 +4,7 @@
 
 **Location**:
 - Linux: `~/.config/indexref-server/config.toml`
-- Windows: `%APPDATA%\snorkysnark\Indexref-Server\config.toml`
+- Windows: `%APPDATA%\snorkysnark\Indexref-Server\config\config.toml`
 - Mac: `~/Library/Application Support/com.snorkysnark.Indexref-Server\config.toml`
 
 **Example:**
