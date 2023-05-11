@@ -11,7 +11,6 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn load(path: &Path) -> eyre::Result<Self> {
-        // TODO: custom FileNotFound error that prints the expected path
         Ok(toml::from_str(&fs::read_to_string(path)?)?)
     }
 }
