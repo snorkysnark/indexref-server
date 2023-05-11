@@ -37,7 +37,7 @@ impl ContainerType {
     from_to_str! {
         pub url_name {
             ContainerType::Telegram => "telegram",
-            ContainerType::SingleFileZ => "singlefile",
+            ContainerType::SingleFileZ => "single_file_z",
             ContainerType::Scrapbook => "scrapbook",
         }
     }
