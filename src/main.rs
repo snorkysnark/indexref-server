@@ -2,17 +2,15 @@ mod config;
 mod entity;
 mod ext;
 mod index;
+mod macros;
 mod path_convert;
 mod paths;
-mod macros;
 
-use std::{
-    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
-    process::exit,
-};
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use axum::{routing::get, Router};
 use clap::{Parser, Subcommand};
+use color_eyre::Help;
 use config::{AppConfig, SourcesConfig};
 use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection};
@@ -41,24 +39,6 @@ pub struct AppState {
     sources: SourcesConfig,
 }
 
-async fn run_migrations(db: &DatabaseConnection) {
-    use dialoguer::{theme::ColorfulTheme, Confirm};
-
-    if let Err(err) = Migrator::up(db, None).await {
-        eprintln!("Migration failed: {err}");
-        if matches!(
-            Confirm::with_theme(&ColorfulTheme::default())
-                .with_prompt("Delete existing database?")
-                .interact(),
-            Ok(true)
-        ) {
-            let _ = Migrator::fresh(db).await;
-        } else {
-            exit(1);
-        }
-    }
-}
-
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     let cli = Cli::parse();
@@ -70,13 +50,17 @@ async fn main() -> eyre::Result<()> {
     let config = AppConfig::load(paths.config_path())?;
 
     let db = Database::connect(paths.db_connection_string()?).await?;
-    run_migrations(&db).await;
 
     match cli.command {
         Commands::Index => {
+            Migrator::fresh(&db).await?;
             index::rebuild_index(&db, &config.sources).await?;
         }
         Commands::Serve => {
+            Migrator::up(&db, None)
+                .await
+                .suggestion("Try rebuilding the index from scratch")?;
+
             let app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
                 .route("/node/:id", get(index::get_node_full_handler))

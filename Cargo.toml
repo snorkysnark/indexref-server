@@ -43,7 +43,6 @@ yaserde_derive = "0.8.0"
 scraper = "0.16.0"
 
 clap = { version = "4.2.4", features = ["derive"] }
-dialoguer = { version = "0.10.4", default-features = false, features = [] }
 
 relative-path = { version = "1.8.0", features = ["serde"] }
 pathdiff = "0.2.1"
