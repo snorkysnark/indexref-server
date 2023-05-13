@@ -26,13 +26,40 @@ impl ServerConfig {
     }
 }
 
-pub use self::sources::{BasePathError, SourcesConfig};
+pub use self::sources::{BasePathError, SourcesConfig, ContainerType};
 mod sources {
     use std::path::{Path, PathBuf};
 
     use serde::Deserialize;
 
-    use crate::entity::types::ContainerType;
+    use crate::{macros::from_to_str, entity::types::NodeType};
+
+    #[derive(Debug, Clone, Copy)]
+    pub enum ContainerType {
+        Telegram,
+        SingleFileZ,
+        Scrapbook,
+    }
+
+    impl ContainerType {
+        from_to_str! {
+            pub url_name {
+                ContainerType::Telegram => "telegram",
+                ContainerType::SingleFileZ => "single_file_z",
+                ContainerType::Scrapbook => "scrapbook",
+            }
+        }
+    }
+
+    impl NodeType {
+        pub fn container_type(self) -> ContainerType {
+            match self {
+                NodeType::Telegram => ContainerType::Telegram,
+                NodeType::SingleFileZ => ContainerType::SingleFileZ,
+                NodeType::ScrapbookPage | NodeType::ScrapbookFile => ContainerType::Scrapbook,
+            }
+        }
+    }
 
     #[derive(Debug, Clone, Deserialize)]
     pub struct SourcesConfig {

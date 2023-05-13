@@ -14,6 +14,8 @@ use crate::{
     AppState,
 };
 
+use super::node_presentation::NodePresentation;
+
 #[derive(Debug, Serialize)]
 pub struct NodeExpanded<M> {
     node: M,
@@ -43,7 +45,7 @@ pub async fn get_node_full(
     db: &DatabaseConnection,
     sources: &SourcesConfig,
     id: i32,
-) -> Result<NodeExpanded<node::ModelAbsPath>, NodeDataError> {
+) -> Result<NodeExpanded<NodePresentation>, NodeDataError> {
     let node_model = node::Entity::find_by_id(id)
         .one(db)
         .await?
@@ -62,7 +64,7 @@ pub async fn get_node_full(
 
     let base_path = sources.get_base_path(node_model.r#type.container_type())?;
     Ok(NodeExpanded {
-        node: node_model.into_abs_path(base_path),
+        node: node_model.into_presentation(base_path),
         data: node_data,
     })
 }
