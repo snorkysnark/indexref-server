@@ -49,6 +49,7 @@ async fn main() -> eyre::Result<()> {
     let paths = ProjectPaths::init("com", "snorkysnark", "Indexref-Server")?;
     let config = AppConfig::load(paths.config_path())?;
 
+    libsqlite3_extensions::init();
     let db = Database::connect(paths.db_connection_string()?).await?;
 
     match cli.command {

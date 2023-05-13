@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = [".", "migration"]
+members = [".", "migration", "libsqlite3-extensions"]
 
 [dependencies]
 tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
@@ -17,10 +17,10 @@ hyper = "0.14.26"
 
 sea-orm = { version = "0.11.3", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls"] }
 libsqlite3-sys = { version = "0.24.2", features = ["bundled"] }
+libsqlite3-extensions = { path = "libsqlite3-extensions" }
+migration = { path = "migration" }
 
 chrono = { version = "0.4.24", features = ["serde"] }
-
-migration = { path = "migration" }
 
 directories-next = "2.0.0"
 walkdir = "2.3.3"
