@@ -1,4 +1,5 @@
 mod config;
+mod date_serializer;
 mod entity;
 mod ext;
 mod index;

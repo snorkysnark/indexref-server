@@ -10,7 +10,7 @@ use relative_path::RelativePathBuf;
 use thiserror::Error;
 use tokio_util::io::ReaderStream;
 
-use crate::{config::BasePathError, entity::types::ContainerType, AppState};
+use crate::{config::{BasePathError, ContainerType}, AppState};
 
 #[derive(Debug, Error)]
 pub enum ServeFileError {

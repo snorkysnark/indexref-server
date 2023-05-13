@@ -6,4 +6,3 @@ pub mod node;
 pub mod telegram;
 
 pub mod types;
-pub mod date_serializer;

@@ -6,9 +6,11 @@ use sea_orm::{DatabaseConnection, EntityTrait};
 use crate::{config::SourcesConfig, entity::node, AppState};
 
 pub use self::node_data::{get_node_full, get_node_full_handler};
+use self::node_presentation::NodePresentation;
 pub use self::serve_file::*;
 
 mod node_data;
+mod node_presentation;
 mod scrapbook;
 mod serve_file;
 mod single_file_z;
@@ -17,14 +19,14 @@ mod telegram;
 pub async fn get_nodes(
     db: &DatabaseConnection,
     sources: &SourcesConfig,
-) -> eyre::Result<Vec<node::ModelAbsPath>> {
+) -> eyre::Result<Vec<NodePresentation>> {
     let nodes: eyre::Result<Vec<_>> = node::Entity::find()
         .all(db)
         .await?
         .into_iter()
         .map(|node| {
             let base_path = sources.get_base_path(node.r#type.container_type())?;
-            Ok(node.into_abs_path(base_path))
+            Ok(node.into_presentation(base_path))
         })
         .collect();
 
