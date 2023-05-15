@@ -152,8 +152,13 @@ async fn insert_one(
         }
     }
 
+    let node_type = match description.r#type.as_str() {
+        "folder" => NodeType::Folder,
+        _ => NodeType::Scrapbook,
+    };
+
     let inserted_node = node::ActiveModel {
-        r#type: Set(NodeType::Scrapbook),
+        r#type: Set(node_type),
         source_folder: Set(Some(SourceFolderType::Scrapbook)),
         attached_table: Set(Some(AttachedTableType::Scrapbook)),
         title: Set(none_if_empty(description.title.clone())),
