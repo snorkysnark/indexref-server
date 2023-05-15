@@ -8,6 +8,8 @@ use crate::macros::from_to_str;
 pub enum NodeType {
     #[sea_orm(string_value = "Root")]
     Root,
+    #[sea_orm(string_value = "Folder")]
+    Folder,
     #[sea_orm(string_value = "Telegram")]
     Telegram,
     #[sea_orm(string_value = "SingleFileZ")]
