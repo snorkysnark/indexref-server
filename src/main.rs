@@ -62,15 +62,13 @@ async fn main() -> eyre::Result<()> {
                 .await
                 .suggestion("Try rebuilding the index from scratch")?;
 
-            // Ignore error if the table already exists
-            // CREATE IF NOT EXISTS is not supported for virtual tables
-            let _ = db.execute_unprepared(
-                r#"CREATE VIRTUAL TABLE node_closure USING transitive_closure (
+            db.execute_unprepared(
+                r#"CREATE VIRTUAL TABLE IF NOT EXISTS node_closure USING transitive_closure (
                 tablename="node",
                 idcolumn="id",
                 parentcolumn="parent_id");"#,
             )
-            .await;
+            .await?;
 
             let app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
