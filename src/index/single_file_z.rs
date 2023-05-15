@@ -1,12 +1,15 @@
 use std::path::Path;
 
+use fs_err as fs;
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
-use fs_err as fs;
 
 use crate::{
-    entity::{node, types::NodeType},
+    entity::{
+        node,
+        types::{NodeType, SourceFolderType},
+    },
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
 };
@@ -48,6 +51,7 @@ pub async fn insert_from_folder(
 
         let inserted = node::ActiveModel {
             r#type: Set(NodeType::SingleFileZ),
+            source_folder: Set(Some(SourceFolderType::SingleFileZ)),
             title: Set(title),
             url: Set(url),
             file: Set(Some(relative_path.into())),

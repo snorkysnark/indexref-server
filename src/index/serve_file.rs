@@ -10,7 +10,7 @@ use relative_path::RelativePathBuf;
 use thiserror::Error;
 use tokio_util::io::ReaderStream;
 
-use crate::{config::{BasePathError, ContainerType}, AppState};
+use crate::{config::BasePathError, entity::types::SourceFolderType, AppState};
 
 #[derive(Debug, Error)]
 pub enum ServeFileError {
@@ -29,7 +29,7 @@ async fn serve_file(
     Path((type_name, rel_path)): Path<(String, RelativePathBuf)>,
 ) -> Result<impl IntoResponse, ServeFileError> {
     let base_path = state.sources.get_base_path(
-        ContainerType::from_url_name(&type_name)
+        SourceFolderType::from_url_name(&type_name)
             .ok_or(ServeFileError::UnknownContainerName(type_name))?,
     )?;
     let full_path = rel_path.to_path(base_path);

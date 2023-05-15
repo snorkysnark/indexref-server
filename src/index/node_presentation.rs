@@ -30,14 +30,11 @@ impl node::Model {
     pub fn into_presentation(self, sources: &SourcesConfig) -> eyre::Result<NodePresentation> {
         let (file, file_proxy) = match self.file {
             Some(rel_path) => {
-                let container = self
-                    .r#type
-                    .container_type()
-                    .context("Cannot resolve file path")?;
-                let base_path = sources.get_base_path(container)?;
+                let source_folder = self.source_folder.context("Node has no source folder")?;
+                let base_path = sources.get_base_path(source_folder)?;
 
                 let full_path = rel_path.0.to_path(base_path);
-                let file_proxy = ["files", container.url_name()]
+                let file_proxy = ["files", source_folder.url_name()]
                     .into_iter()
                     .chain(rel_path.0.components().map(|component| component.as_str()))
                     .map(|segment| format!("/{}", urlencoding::encode(segment)))

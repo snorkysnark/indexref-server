@@ -26,41 +26,13 @@ impl ServerConfig {
     }
 }
 
-pub use self::sources::{BasePathError, ContainerType, SourcesConfig};
+pub use self::sources::{BasePathError, SourcesConfig};
 mod sources {
     use std::path::{Path, PathBuf};
 
     use serde::Deserialize;
 
-    use crate::{entity::types::NodeType, macros::from_to_str};
-
-    #[derive(Debug, Clone, Copy)]
-    pub enum ContainerType {
-        Telegram,
-        SingleFileZ,
-        Scrapbook,
-    }
-
-    impl ContainerType {
-        from_to_str! {
-            pub url_name {
-                ContainerType::Telegram => "telegram",
-                ContainerType::SingleFileZ => "single_file_z",
-                ContainerType::Scrapbook => "scrapbook",
-            }
-        }
-    }
-
-    impl NodeType {
-        pub fn container_type(self) -> Option<ContainerType> {
-            match self {
-                NodeType::Telegram => Some(ContainerType::Telegram),
-                NodeType::SingleFileZ => Some(ContainerType::SingleFileZ),
-                NodeType::ScrapbookPage | NodeType::ScrapbookFile => Some(ContainerType::Scrapbook),
-                _ => None,
-            }
-        }
-    }
+    use crate::entity::types::SourceFolderType;
 
     #[derive(Debug, Clone, Deserialize)]
     pub struct SourcesConfig {
@@ -76,7 +48,10 @@ mod sources {
     }
 
     impl SourcesConfig {
-        pub fn get_base_path(&self, container_type: ContainerType) -> Result<&Path, BasePathError> {
+        pub fn get_base_path(
+            &self,
+            container_type: SourceFolderType,
+        ) -> Result<&Path, BasePathError> {
             macro_rules! config_value {
                 ($this:expr, $field:ident) => {
                     $this
@@ -87,9 +62,9 @@ mod sources {
             }
 
             Ok(match container_type {
-                ContainerType::Telegram => config_value!(self, telegram_chat)?,
-                ContainerType::SingleFileZ => config_value!(self, single_file_z)?,
-                ContainerType::Scrapbook => config_value!(self, scrapbook)?,
+                SourceFolderType::Telegram => config_value!(self, telegram_chat)?,
+                SourceFolderType::SingleFileZ => config_value!(self, single_file_z)?,
+                SourceFolderType::Scrapbook => config_value!(self, scrapbook)?,
             })
         }
     }

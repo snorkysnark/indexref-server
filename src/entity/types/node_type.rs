@@ -1,6 +1,8 @@
 use sea_orm::{DeriveActiveEnum, EnumIter};
 use serde::Serialize;
 
+use crate::macros::from_to_str;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "String(None)")]
 pub enum NodeType {
@@ -10,10 +12,8 @@ pub enum NodeType {
     Telegram,
     #[sea_orm(string_value = "SingleFileZ")]
     SingleFileZ,
-    #[sea_orm(string_value = "ScrapbookPage")]
-    ScrapbookPage,
-    #[sea_orm(string_value = "ScrapbookFile")]
-    ScrapbookFile,
+    #[sea_orm(string_value = "Scrapbook")]
+    Scrapbook,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]
@@ -21,4 +21,25 @@ pub enum NodeType {
 pub enum AttachedTableType {
     #[sea_orm(string_value = "Telegram")]
     Telegram,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]
+#[sea_orm(rs_type = "String", db_type = "String(None)")]
+pub enum SourceFolderType {
+    #[sea_orm(string_value = "Telegram")]
+    Telegram,
+    #[sea_orm(string_value = "SingleFileZ")]
+    SingleFileZ,
+    #[sea_orm(string_value = "Scrapbook")]
+    Scrapbook,
+}
+
+impl SourceFolderType {
+    from_to_str! {
+        pub url_name {
+            SourceFolderType::Telegram => "telegram",
+            SourceFolderType::SingleFileZ => "single_file_z",
+            SourceFolderType::Scrapbook => "scrapbook",
+        }
+    }
 }
