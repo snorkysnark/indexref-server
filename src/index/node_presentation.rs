@@ -11,6 +11,8 @@ use crate::{
     entity::{node, types::NodeType},
 };
 
+use super::types::StringVec;
+
 #[derive(Clone, Debug, Serialize)]
 pub struct NodePresentation {
     pub id: i32,
@@ -62,7 +64,7 @@ impl node::Model {
 #[derive(Clone, Debug, Serialize)]
 pub struct NodeRelations {
     parent_id: Option<i32>,
-    children: Option<String>,
+    children: Vec<i32>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -77,7 +79,7 @@ pub struct NodePresentationWithRelations {
 pub struct NodeWithChildren {
     #[serde(flatten)]
     node: node::Model,
-    children: Option<String>,
+    children: StringVec<i32>,
 }
 
 impl FromQueryResult for NodeWithChildren {
@@ -96,7 +98,7 @@ impl NodeWithChildren {
     ) -> eyre::Result<NodePresentationWithRelations> {
         let rel = NodeRelations {
             parent_id: self.node.parent_id,
-            children: self.children,
+            children: self.children.into(),
         };
 
         Ok(NodePresentationWithRelations {

@@ -16,6 +16,7 @@ mod scrapbook;
 mod serve_file;
 mod single_file_z;
 mod telegram;
+mod types;
 
 pub async fn get_nodes(
     db: &DatabaseConnection,
