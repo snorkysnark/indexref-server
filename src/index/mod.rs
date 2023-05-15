@@ -1,14 +1,13 @@
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, Json};
 use hyper::StatusCode;
-use migration::{ConnectionTrait, Migrator, MigratorTrait};
-use sea_orm::{DatabaseConnection, FromQueryResult, QueryResult, Statement};
-use serde::Serialize;
+use migration::{Migrator, MigratorTrait};
+use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 
 use crate::{config::SourcesConfig, entity::node, AppState};
 
 // pub use self::node_data::{get_node_full, get_node_full_handler};
-use self::node_presentation::NodePresentationWithRelations;
+use self::node_presentation::{NodePresentationWithRelations, NodeWithChildren};
 pub use self::serve_file::*;
 
 // mod node_data;
@@ -18,26 +17,10 @@ mod serve_file;
 mod single_file_z;
 mod telegram;
 
-#[derive(Debug, Serialize)]
-pub struct NodeWithChildren {
-    #[serde(flatten)]
-    node: node::Model,
-    children: Option<String>,
-}
-
-impl FromQueryResult for NodeWithChildren {
-    fn from_query_result(res: &QueryResult, pre: &str) -> Result<Self, migration::DbErr> {
-        Ok(NodeWithChildren {
-            node: node::Model::from_query_result(res, pre)?,
-            children: res.try_get(pre, "children")?,
-        })
-    }
-}
-
 pub async fn get_nodes(
     db: &DatabaseConnection,
     sources: &SourcesConfig,
-) -> eyre::Result<Vec<NodeWithChildren>> {
+) -> eyre::Result<Vec<NodePresentationWithRelations>> {
     let select = Statement::from_string(
         sea_orm::DatabaseBackend::Sqlite,
         "select node.*, group_concat(nc.id) as children
@@ -48,8 +31,14 @@ pub async fn get_nodes(
             .to_owned(),
     );
 
-    let nodes = NodeWithChildren::find_by_statement(select).all(db).await?;
-    Ok(nodes)
+    let nodes: eyre::Result<Vec<_>> = NodeWithChildren::find_by_statement(select)
+        .all(db)
+        .await?
+        .into_iter()
+        .map(|node| node.into_presentation(sources))
+        .collect();
+
+    Ok(nodes?)
 }
 
 pub async fn get_nodes_handler(state: State<AppState>) -> Response {

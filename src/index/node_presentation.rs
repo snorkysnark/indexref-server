@@ -1,7 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use chrono::NaiveDateTime;
 use eyre::ContextCompat;
+use sea_orm::{FromQueryResult, QueryResult};
 use serde::Serialize;
 
 use crate::{
@@ -21,20 +22,6 @@ pub struct NodePresentation {
     pub file: Option<PathBuf>,
     pub file_proxy: Option<String>,
     pub original_id: Option<String>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct NodeRelations {
-    parent_id: i32,
-    children: String,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct NodePresentationWithRelations {
-    #[serde(flatten)]
-    data: NodePresentation,
-    #[serde(flatten)]
-    rel: NodeRelations,
 }
 
 impl node::Model {
@@ -68,6 +55,53 @@ impl node::Model {
             file,
             file_proxy,
             original_id: self.original_id,
+        })
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct NodeRelations {
+    parent_id: Option<i32>,
+    children: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct NodePresentationWithRelations {
+    #[serde(flatten)]
+    node: NodePresentation,
+    #[serde(flatten)]
+    rel: NodeRelations,
+}
+
+#[derive(Debug, Serialize)]
+pub struct NodeWithChildren {
+    #[serde(flatten)]
+    node: node::Model,
+    children: Option<String>,
+}
+
+impl FromQueryResult for NodeWithChildren {
+    fn from_query_result(res: &QueryResult, pre: &str) -> Result<Self, migration::DbErr> {
+        Ok(NodeWithChildren {
+            node: node::Model::from_query_result(res, pre)?,
+            children: res.try_get(pre, "children")?,
+        })
+    }
+}
+
+impl NodeWithChildren {
+    pub fn into_presentation(
+        self,
+        sources: &SourcesConfig,
+    ) -> eyre::Result<NodePresentationWithRelations> {
+        let rel = NodeRelations {
+            parent_id: self.node.parent_id,
+            children: self.children,
+        };
+
+        Ok(NodePresentationWithRelations {
+            node: self.node.into_presentation(sources)?,
+            rel,
         })
     }
 }
