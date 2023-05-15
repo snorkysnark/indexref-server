@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use crate::{
     config::SourcesConfig,
-    entity::{node, telegram, types::NodeType},
+    entity::{node, telegram, types::AttachedTableType},
     AppState,
 };
 
@@ -33,8 +33,11 @@ pub enum NodeData {
 pub enum NodeDataError {
     #[error("Node not found: {id}")]
     NodeNotFound { id: i32 },
-    #[error("Node data not found: {id} {node_type}")]
-    NodeDataNotFound { id: i32, node_type: NodeType },
+    #[error("Node data not found: {id} {attached_table}")]
+    NodeDataNotFound {
+        id: i32,
+        attached_table: AttachedTableType,
+    },
     #[error("{0}")]
     DbError(#[from] sea_orm::error::DbErr),
     #[error("{0}")]
@@ -50,16 +53,16 @@ pub async fn get_node_full(
         .one(db)
         .await?
         .ok_or(NodeDataError::NodeNotFound { id })?;
-    let node_data = match node_model.r#type {
-        NodeType::Telegram => {
+    let node_data = match node_model.attached_table {
+        Some(AttachedTableType::Telegram) => {
             NodeData::Telegram(telegram::Entity::find_by_id(id).one(db).await?.ok_or(
                 NodeDataError::NodeDataNotFound {
                     id,
-                    node_type: node_model.r#type,
+                    attached_table: AttachedTableType::Telegram,
                 },
             )?)
         }
-        _ => NodeData::Empty,
+        None => NodeData::Empty,
     };
 
     Ok(NodeExpanded {

@@ -9,7 +9,7 @@ use walkdir::WalkDir;
 
 use self::raw::{Chat, ChatMetadata, Message, ParsedAndRaw};
 use crate::{
-    entity::{node, telegram, types::NodeType},
+    entity::{node, telegram, types::{NodeType, AttachedTableType}},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
 };
@@ -39,6 +39,7 @@ async fn insert_message(
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Telegram),
+        attached_table: Set(Some(AttachedTableType::Telegram)),
         title: Set(Some(full_text)),
         url: Set(url),
         created: Set(Some(created)),
