@@ -26,13 +26,13 @@ impl ServerConfig {
     }
 }
 
-pub use self::sources::{BasePathError, SourcesConfig, ContainerType};
+pub use self::sources::{BasePathError, ContainerType, SourcesConfig};
 mod sources {
     use std::path::{Path, PathBuf};
 
     use serde::Deserialize;
 
-    use crate::{macros::from_to_str, entity::types::NodeType};
+    use crate::{entity::types::NodeType, macros::from_to_str};
 
     #[derive(Debug, Clone, Copy)]
     pub enum ContainerType {
@@ -52,11 +52,12 @@ mod sources {
     }
 
     impl NodeType {
-        pub fn container_type(self) -> ContainerType {
+        pub fn container_type(self) -> Option<ContainerType> {
             match self {
-                NodeType::Telegram => ContainerType::Telegram,
-                NodeType::SingleFileZ => ContainerType::SingleFileZ,
-                NodeType::ScrapbookPage | NodeType::ScrapbookFile => ContainerType::Scrapbook,
+                NodeType::Telegram => Some(ContainerType::Telegram),
+                NodeType::SingleFileZ => Some(ContainerType::SingleFileZ),
+                NodeType::ScrapbookPage | NodeType::ScrapbookFile => Some(ContainerType::Scrapbook),
+                _ => None,
             }
         }
     }
