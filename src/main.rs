@@ -16,7 +16,7 @@ use config::{AppConfig, SourcesConfig};
 use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection};
 
-use migration::{Migrator, MigratorTrait};
+use migration::{ConnectionTrait, Migrator, MigratorTrait};
 
 #[derive(Parser)]
 struct Cli {
@@ -55,7 +55,6 @@ async fn main() -> eyre::Result<()> {
 
     match cli.command {
         Commands::Index => {
-            Migrator::fresh(&db).await?;
             index::rebuild_index(&db, &config.sources).await?;
         }
         Commands::Serve => {
@@ -63,9 +62,19 @@ async fn main() -> eyre::Result<()> {
                 .await
                 .suggestion("Try rebuilding the index from scratch")?;
 
+            // Ignore error if the table already exists
+            // CREATE IF NOT EXISTS is not supported for virtual tables
+            let _ = db.execute_unprepared(
+                r#"CREATE VIRTUAL TABLE node_closure USING transitive_closure (
+                tablename="node",
+                idcolumn="id",
+                parentcolumn="parent_id");"#,
+            )
+            .await;
+
             let app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
-                .route("/node/:id", get(index::get_node_full_handler))
+                // .route("/node/:id", get(index::get_node_full_handler))
                 .route("/files/:node_type/*path", get(index::serve_file_handler))
                 .with_state(AppState {
                     db,

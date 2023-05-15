@@ -18,10 +18,19 @@ pub struct Model {
     pub created: Option<NaiveDateTime>,
     pub file: Option<RelativePathSql>,
     pub original_id: Option<String>,
+    pub parent_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "Entity",
+        from = "Column::ParentId",
+        to = "Column::Id",
+        on_update = "NoAction",
+        on_delete = "Cascade"
+    )]
+    SelfRef,
     #[sea_orm(has_many = "super::telegram::Entity")]
     Telegram,
 }

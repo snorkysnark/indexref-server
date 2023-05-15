@@ -17,6 +17,23 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Node::Created).string())
                     .col(ColumnDef::new(Node::File).string())
                     .col(ColumnDef::new(Node::OriginalId).string())
+                    .col(ColumnDef::new(Node::ParentId).integer().default(1))
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Node::Table, Node::ParentId)
+                            .to(Node::Table, Node::Id)
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .exec_stmt(
+                Query::insert()
+                    .into_table(Node::Table)
+                    .columns([Node::Type, Node::ParentId])
+                    .values_panic(["Root".into(), (None as Option<i32>).into()])
                     .to_owned(),
             )
             .await?;
@@ -44,4 +61,5 @@ enum Node {
     Created,
     File,
     OriginalId,
+    ParentId,
 }
