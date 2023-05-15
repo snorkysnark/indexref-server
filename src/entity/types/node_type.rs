@@ -21,6 +21,8 @@ pub enum NodeType {
 pub enum AttachedTableType {
     #[sea_orm(string_value = "Telegram")]
     Telegram,
+    #[sea_orm(string_value = "Scrapbook")]
+    Scrapbook,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]

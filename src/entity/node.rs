@@ -33,6 +33,8 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     SelfRef,
+    #[sea_orm(has_many = "super::scrapbook::Entity")]
+    Scrapbook,
     #[sea_orm(has_many = "super::telegram::Entity")]
     Telegram,
 }
@@ -40,6 +42,12 @@ pub enum Relation {
 impl Related<super::telegram::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Telegram.def()
+    }
+}
+
+impl Related<super::scrapbook::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Scrapbook.def()
     }
 }
 
