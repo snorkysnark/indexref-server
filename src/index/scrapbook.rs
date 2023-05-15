@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use chrono::{DateTime, Local};
 use eyre::{eyre, ContextCompat};
@@ -30,6 +33,8 @@ use crate::{
 struct Rdf {
     #[yaserde(rename = "Description")]
     descriptions: Vec<RdfDescription>,
+    #[yaserde(rename = "Seq")]
+    sequences: Vec<RdfSeq>,
 }
 
 #[derive(Debug, YaDeserialize)]
@@ -50,6 +55,20 @@ struct RdfDescription {
     icon: String,
     #[yaserde(attribute, prefix = "NS1")]
     source: String,
+}
+
+#[derive(Debug, YaDeserialize)]
+struct RdfSeq {
+    #[yaserde(attribute, prefix = "RDF")]
+    about: String,
+    #[yaserde(rename = "li")]
+    items: Vec<RdfLi>,
+}
+
+#[derive(Debug, YaDeserialize)]
+struct RdfLi {
+    #[yaserde(attribute, prefix = "RDF")]
+    resource: String,
 }
 
 fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
@@ -89,7 +108,7 @@ async fn insert_one(
     root_path: &Path,
     scrapbook_path: &Path,
     description: RdfDescription,
-) -> eyre::Result<node::Model> {
+) -> eyre::Result<(node::Model, scrapbook::Model)> {
     let index_html = {
         let index_html = scrapbook_path
             .join("data")
@@ -147,7 +166,7 @@ async fn insert_one(
     .insert(db)
     .await?;
 
-    scrapbook::ActiveModel {
+    let inserted_data = scrapbook::ActiveModel {
         node_id: Set(inserted_node.id),
         about: Set(none_if_empty(description.about)),
         old_id: Set(none_if_empty(description.id)),
@@ -161,7 +180,7 @@ async fn insert_one(
     .insert(db)
     .await?;
 
-    Ok(inserted_node)
+    Ok((inserted_node, inserted_data))
 }
 
 pub async fn insert_from_folder(
@@ -180,8 +199,40 @@ pub async fn insert_from_folder(
         let rdf: Rdf = yaserde::de::from_str(&fs::read_to_string(entry.path())?)
             .map_err(|err| eyre!("XML parse error: {err}"))?;
 
+        let mut about_to_id: HashMap<String, i32> = HashMap::new();
+
         for description in rdf.descriptions {
-            inserted_nodes.push(insert_one(db, root, &scrapbook_path, description).await?);
+            let (inserted_node, node_data) =
+                insert_one(db, root, &scrapbook_path, description).await?;
+
+            if let Some(about) = node_data.about {
+                about_to_id.insert(about, inserted_node.id);
+            }
+            inserted_nodes.push(inserted_node);
+        }
+
+        for sequence in rdf.sequences {
+            if sequence.about == "urn:scrapbook:root" {
+                // For now, mapping the scrapbook root to tree root
+                continue;
+            }
+
+            let parent_id = about_to_id.get(&sequence.about).context(sequence.about)?;
+            let child_ids: Result<Vec<_>, _> = sequence
+                .items
+                .into_iter()
+                .map(|li| about_to_id.get(&li.resource).context(li.resource))
+                .collect();
+
+            for child_id in child_ids? {
+                node::ActiveModel {
+                    id: Set(*child_id),
+                    parent_id: Set(Some(*parent_id)),
+                    ..Default::default()
+                }
+                .update(db)
+                .await?;
+            }
         }
     }
 
