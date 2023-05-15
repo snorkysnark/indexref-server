@@ -6,11 +6,11 @@ use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 
 use crate::{config::SourcesConfig, entity::node, AppState};
 
-// pub use self::node_data::{get_node_full, get_node_full_handler};
+pub use self::node_data::{get_node_full, get_node_full_handler};
 use self::node_presentation::{NodePresentationWithRelations, NodeWithChildren};
 pub use self::serve_file::*;
 
-// mod node_data;
+mod node_data;
 mod node_presentation;
 mod scrapbook;
 mod serve_file;

@@ -74,7 +74,7 @@ async fn main() -> eyre::Result<()> {
 
             let app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
-                // .route("/node/:id", get(index::get_node_full_handler))
+                .route("/node/:id", get(index::get_node_full_handler))
                 .route("/files/:node_type/*path", get(index::serve_file_handler))
                 .with_state(AppState {
                     db,

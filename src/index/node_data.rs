@@ -9,7 +9,7 @@ use serde::Serialize;
 use thiserror::Error;
 
 use crate::{
-    config::{BasePathError, SourcesConfig},
+    config::SourcesConfig,
     entity::{node, telegram, types::NodeType},
     AppState,
 };
@@ -38,7 +38,7 @@ pub enum NodeDataError {
     #[error("{0}")]
     DbError(#[from] sea_orm::error::DbErr),
     #[error("{0}")]
-    BasePath(#[from] BasePathError),
+    NodePresentationError(#[source] eyre::Report),
 }
 
 pub async fn get_node_full(
@@ -62,9 +62,10 @@ pub async fn get_node_full(
         _ => NodeData::Empty,
     };
 
-    let base_path = sources.get_base_path(node_model.r#type.container_type())?;
     Ok(NodeExpanded {
-        node: node_model.into_presentation(base_path),
+        node: node_model
+            .into_presentation(sources)
+            .map_err(NodeDataError::NodePresentationError)?,
         data: node_data,
     })
 }
