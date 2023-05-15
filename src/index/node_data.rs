@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use crate::{
     config::SourcesConfig,
-    entity::{node, telegram, types::AttachedTableType},
+    entity::{node, scrapbook, telegram, types::AttachedTableType},
     AppState,
 };
 
@@ -26,6 +26,7 @@ pub struct NodeExpanded<M> {
 #[serde(untagged)]
 pub enum NodeData {
     Telegram(telegram::Model),
+    Scrapbook(scrapbook::Model),
     Empty,
 }
 
@@ -59,6 +60,14 @@ pub async fn get_node_full(
                 NodeDataError::NodeDataNotFound {
                     id,
                     attached_table: AttachedTableType::Telegram,
+                },
+            )?)
+        }
+        Some(AttachedTableType::Scrapbook) => {
+            NodeData::Scrapbook(scrapbook::Entity::find_by_id(id).one(db).await?.ok_or(
+                NodeDataError::NodeDataNotFound {
+                    id,
+                    attached_table: AttachedTableType::Scrapbook,
                 },
             )?)
         }

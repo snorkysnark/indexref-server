@@ -2,6 +2,7 @@ pub use sea_orm_migration::prelude::*;
 
 mod m20230515_142131_create_table_nodes;
 mod m20230426_114559_create_table_telegram;
+mod m20230515_143718_create_table_scrapbook;
 
 pub struct Migrator;
 
@@ -11,6 +12,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20230515_142131_create_table_nodes::Migration),
             Box::new(m20230426_114559_create_table_telegram::Migration),
+            Box::new(m20230515_143718_create_table_scrapbook::Migration),
         ]
     }
 }

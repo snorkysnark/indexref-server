@@ -13,8 +13,8 @@ use yaserde_derive::YaDeserialize;
 
 use crate::{
     entity::{
-        node,
-        types::{NodeType, SourceFolderType},
+        node, scrapbook,
+        types::{AttachedTableType, NodeType, SourceFolderType},
     },
     ext::ResultExt,
     path_convert::ToRelativePath,
@@ -84,65 +84,104 @@ fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
     Ok(file_path)
 }
 
+async fn insert_one(
+    db: &DatabaseConnection,
+    root_path: &Path,
+    scrapbook_path: &Path,
+    description: RdfDescription,
+) -> eyre::Result<node::Model> {
+    let index_html = {
+        let index_html = scrapbook_path
+            .join("data")
+            .join(&description.id)
+            .join("index.html");
+
+        if index_html.exists() {
+            Some(index_html)
+        } else {
+            None
+        }
+    };
+
+    let metadata = index_html
+        .as_ref()
+        .and_then(|path| fs::metadata(&path).ok());
+    let created = metadata
+        // For some reason, meta.created() returns the time the file was appeared in THIS
+        // filesystem (and not where it originated)
+        // meta.modified() returns the correct date
+        .and_then(|meta| meta.modified().ok())
+        .map(|time| DateTime::<Local>::from(time).naive_local());
+
+    // For file nodes, the actual file path is found in index.html's redirect
+    let file_path = match description.r#type.as_str() {
+        "file" => index_html
+            .as_ref()
+            .map(|index_html| extract_redirect_path(index_html))
+            .transpose()?,
+        _ => index_html,
+    };
+
+    let rel_path = file_path
+        .map(|path| path.to_relative_path(root_path))
+        .transpose()?;
+
+    fn none_if_empty(string: String) -> Option<String> {
+        match string.as_str() {
+            "" => None,
+            _ => Some(string),
+        }
+    }
+
+    let inserted_node = node::ActiveModel {
+        r#type: Set(NodeType::Scrapbook),
+        source_folder: Set(Some(SourceFolderType::Scrapbook)),
+        attached_table: Set(Some(AttachedTableType::Scrapbook)),
+        title: Set(none_if_empty(description.title.clone())),
+        url: Set(none_if_empty(description.source.clone())),
+        file: Set(rel_path.map(Into::into)),
+        created: Set(created),
+        original_id: Set(none_if_empty(description.id.clone())),
+        ..Default::default()
+    }
+    .insert(db)
+    .await?;
+
+    scrapbook::ActiveModel {
+        node_id: Set(inserted_node.id),
+        about: Set(none_if_empty(description.about)),
+        old_id: Set(none_if_empty(description.id)),
+        r#type: Set(none_if_empty(description.r#type)),
+        title: Set(none_if_empty(description.title)),
+        chars: Set(none_if_empty(description.chars)),
+        comment: Set(none_if_empty(description.comment)),
+        icon: Set(none_if_empty(description.icon)),
+        source: Set(none_if_empty(description.source)),
+    }
+    .insert(db)
+    .await?;
+
+    Ok(inserted_node)
+}
+
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
-    folder: &Path,
+    root: &Path,
 ) -> eyre::Result<Vec<node::Model>> {
     let mut inserted_nodes = vec![];
 
-    for entry in WalkDir::new(folder)
+    for entry in WalkDir::new(root)
         .into_iter()
         .filter_map(|result| result.ok_log_errors())
         .filter(|e| matches!(e.file_name().to_str(), Some("scrapbook.rdf")))
     {
-        let scrapbook_root = entry.path().parent().unwrap();
+        let scrapbook_path = entry.path().parent().unwrap();
 
         let rdf: Rdf = yaserde::de::from_str(&fs::read_to_string(entry.path())?)
             .map_err(|err| eyre!("XML parse error: {err}"))?;
 
         for description in rdf.descriptions {
-            let index_html_path = scrapbook_root
-                .join("data")
-                .join(&description.id)
-                .join("index.html");
-
-            let metadata = fs::metadata(&index_html_path).ok();
-            let created = metadata
-                // For some reason, meta.created() returns the time the file was appeared in THIS
-                // filesystem (and not where it originated)
-                // meta.modified() returns the correct date
-                .and_then(|meta| meta.modified().ok())
-                .map(|time| DateTime::<Local>::from(time).naive_local());
-
-            // For file nodes, the actual file path is found in index.html's redirect
-            let file_path = match description.r#type.as_str() {
-                "file" => extract_redirect_path(&index_html_path)?,
-                _ => index_html_path,
-            };
-
-            let rel_path = file_path.to_relative_path(folder)?;
-
-            fn none_if_empty(string: String) -> Option<String> {
-                match string.as_str() {
-                    "" => None,
-                    _ => Some(string),
-                }
-            }
-
-            let inserted = node::ActiveModel {
-                r#type: Set(NodeType::Scrapbook),
-                source_folder: Set(Some(SourceFolderType::Scrapbook)),
-                title: Set(none_if_empty(description.title)),
-                url: Set(none_if_empty(description.source)),
-                file: Set(Some(rel_path.into())),
-                created: Set(created),
-                original_id: Set(none_if_empty(description.id)),
-                ..Default::default()
-            }
-            .insert(db)
-            .await?;
-
-            inserted_nodes.push(inserted);
+            inserted_nodes.push(insert_one(db, root, &scrapbook_path, description).await?);
         }
     }
 
