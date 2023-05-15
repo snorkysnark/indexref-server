@@ -13,6 +13,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Node::Id).integer().not_null().primary_key())
                     .col(ColumnDef::new(Node::Type).string().not_null())
                     .col(ColumnDef::new(Node::Title).string())
+                    .col(ColumnDef::new(Node::SourceFolder).string())
+                    .col(ColumnDef::new(Node::AttachedTable).string())
                     .col(ColumnDef::new(Node::Url).string())
                     .col(ColumnDef::new(Node::Created).string())
                     .col(ColumnDef::new(Node::File).string())
@@ -56,6 +58,8 @@ enum Node {
     Table,
     Id,
     Type,
+    SourceFolder,
+    AttachedTable,
     Title,
     Url,
     Created,

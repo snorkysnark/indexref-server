@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Local};
 use eyre::{eyre, ContextCompat};
+use fs_err as fs;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use scraper::{Html, Selector};
@@ -9,10 +10,12 @@ use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use url::Url;
 use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
-use fs_err as fs;
 
 use crate::{
-    entity::{node, types::NodeType},
+    entity::{
+        node,
+        types::{NodeType, SourceFolderType},
+    },
     ext::ResultExt,
     path_convert::ToRelativePath,
 };
@@ -98,12 +101,6 @@ pub async fn insert_from_folder(
             .map_err(|err| eyre!("XML parse error: {err}"))?;
 
         for description in rdf.descriptions {
-            let node_type = match description.r#type.as_str() {
-                "" => NodeType::ScrapbookPage,
-                "file" => NodeType::ScrapbookFile,
-                _ => continue,
-            };
-
             let index_html_path = scrapbook_root
                 .join("data")
                 .join(&description.id)
@@ -118,8 +115,8 @@ pub async fn insert_from_folder(
                 .map(|time| DateTime::<Local>::from(time).naive_local());
 
             // For file nodes, the actual file path is found in index.html's redirect
-            let file_path = match node_type {
-                NodeType::ScrapbookFile => extract_redirect_path(&index_html_path)?,
+            let file_path = match description.r#type.as_str() {
+                "file" => extract_redirect_path(&index_html_path)?,
                 _ => index_html_path,
             };
 
@@ -133,7 +130,8 @@ pub async fn insert_from_folder(
             }
 
             let inserted = node::ActiveModel {
-                r#type: Set(node_type),
+                r#type: Set(NodeType::Scrapbook),
+                source_folder: Set(Some(SourceFolderType::Scrapbook)),
                 title: Set(none_if_empty(description.title)),
                 url: Set(none_if_empty(description.source)),
                 file: Set(Some(rel_path.into())),
