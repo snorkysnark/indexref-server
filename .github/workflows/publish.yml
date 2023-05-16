@@ -5,31 +5,53 @@ on:
     tags:
       - '*'
 
+env:
+  APPNAME: indexref-server
+
 jobs:
-  publish:
-    name: Publish for ${{ matrix.os }}
+  build:
+    name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: indexref-server
-            asset_name: indexref-server-linux
+            binary: $APPNAME
+            asset_name: $APPNAME-linux.zip
           - os: windows-latest
-            artifact_name: indexref-server.exe
-            asset_name: indexref-server-windows.exe
+            binary: $APPNAME.exe
+            asset_name: $APPNAME-windows.zip
           - os: macos-latest
-            artifact_name: indexref-server
-            asset_name: indexref-server-macos
+            binary: $APPNAME
+            asset_name: $APPNAME-macos.zip
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --release --locked
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - name: Build Server
+      run: cargo build --release --features static_server --locked
+
+    - uses: actions/setup-node@v3
+    - name: Build Client
+      working-directory: ./client
+      run: |
+        npm install
+        npm run build
+
+    - name: Archive
+      run: |
+        mkdir ./target/$APPNAME
+        cp ./target/release/${{ matrix.binary }} ./target/$APPNAME/${{ matrix.binary }}
+        cp -r ./client/dist/ ./target/$APPNAME/static
+        (cd ./target; zip -r -D $APPNAME.zip ./$APPNAME)
+      shell: bash
+
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/release/${{ matrix.artifact_name }}
+        file: target/$APPNAME.zip
         asset_name: ${{ matrix.asset_name }}
         tag: ${{ github.ref }}

@@ -70,7 +70,8 @@ async fn main() -> eyre::Result<()> {
             )
             .await?;
 
-            let app = Router::new()
+            #[allow(unused_mut)]
+            let mut app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
                 .route("/node/:id", get(index::get_node_full_handler))
                 .route("/files/:node_type/*path", get(index::serve_file_handler))
@@ -78,6 +79,16 @@ async fn main() -> eyre::Result<()> {
                     db,
                     sources: config.sources,
                 });
+
+            #[cfg(feature = "static_server")]
+            {
+                use tower_http::services::{ServeDir, ServeFile};
+                use axum::routing::get_service;
+
+                app = app
+                    .nest_service("/static", ServeDir::new("static"))
+                    .route("/", get_service(ServeFile::new("static/index.html")));
+            }
 
             axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
                 LOCALHOST,
