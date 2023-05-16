@@ -1350,7 +1350,7 @@ dependencies = [
 
 [[package]]
 name = "indexref-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "axum",
  "chrono",
@@ -1465,7 +1465,7 @@ checksum = "6a987beff54b60ffa6d51982e1aa1146bc42f19bd26be28b0586f252fccf5317"
 
 [[package]]
 name = "libsqlite3-extensions"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cc",
  "libsqlite3-sys",
