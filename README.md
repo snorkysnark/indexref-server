@@ -25,6 +25,7 @@ port = 3200
 
 ## Server
 
+- `http://localhost:3200/` - Tree visualization (Web)
 - `http://localhost:3200/nodes` - List all nodes (JSON)
 - `http://localhost:3200/node/<id>` - Expanded node data (JSON)
 - `http://localhost:3200/files/<source>/<..path>` - Access a file in one of the source folders\
