@@ -52,6 +52,6 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/$APPNAME.zip
+        file: target/${{ env.APPNAME }}.zip
         asset_name: ${{ matrix.asset_name }}
         tag: ${{ github.ref }}
