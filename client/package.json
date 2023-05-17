@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "vite",
+        "dev": "VITE_SERVER='http://localhost:3200' vite",
         "build": "vite build",
         "preview": "vite preview"
     },

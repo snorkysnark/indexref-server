@@ -1,5 +1,4 @@
 mod config;
-mod date_serializer;
 mod entity;
 mod ext;
 mod index;
@@ -17,6 +16,7 @@ use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection};
 
 use migration::{ConnectionTrait, Migrator, MigratorTrait};
+use tower_http::cors::{self, CorsLayer};
 
 #[derive(Parser)]
 struct Cli {
@@ -78,12 +78,13 @@ async fn main() -> eyre::Result<()> {
                 .with_state(AppState {
                     db,
                     sources: config.sources,
-                });
+                })
+                .layer(CorsLayer::new().allow_origin(cors::Any));
 
             #[cfg(feature = "static_server")]
             {
-                use tower_http::services::{ServeDir, ServeFile};
                 use axum::routing::get_service;
+                use tower_http::services::{ServeDir, ServeFile};
 
                 app = app
                     .nest_service("/static", ServeDir::new("static"))
