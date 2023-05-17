@@ -15,4 +15,4 @@ rm ./target/indexref-server.zip || true
 mkdir ./target/$APPNAME
 cp ./target/release/$BINARY ./target/$APPNAME/$BINARY
 cp -r ./client/dist/ ./target/$APPNAME/static
-(cd ./target; zip -r -D $APPNAME.zip ./$APPNAME)
+(cd ./target; zip -r -D $APPNAME.zip ./$APPNAME || 7z a -tzip $APPNAME.zip ./$APPNAME)
