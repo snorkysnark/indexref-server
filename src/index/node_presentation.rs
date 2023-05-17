@@ -7,7 +7,6 @@ use serde::Serialize;
 
 use crate::{
     config::SourcesConfig,
-    date_serializer::human_readable_opt,
     entity::{node, types::NodeType},
 };
 
@@ -19,7 +18,6 @@ pub struct NodePresentation {
     pub r#type: NodeType,
     pub title: Option<String>,
     pub url: Option<String>,
-    #[serde(serialize_with = "human_readable_opt")]
     pub created: Option<NaiveDateTime>,
     pub file: Option<PathBuf>,
     pub file_proxy: Option<String>,

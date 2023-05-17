@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   fill="none"
+   height="128"
+   viewBox="0 0 128 128"
+   width="128"
+   version="1.1"
+   id="svg278"
+   sodipodi:docname="t_logo_sprite_crop.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs282" />
+  <sodipodi:namedview
+     id="namedview280"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="0.99983378"
+     inkscape:cx="1.0001662"
+     inkscape:cy="173.52884"
+     inkscape:window-width="1920"
+     inkscape:window-height="1060"
+     inkscape:window-x="1920"
+     inkscape:window-y="20"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg278" />
+  <linearGradient
+     id="a">
+    <stop
+       offset="0"
+       stop-color="#2aabee"
+       id="stop159" />
+    <stop
+       offset="1"
+       stop-color="#229ed9"
+       id="stop161" />
+  </linearGradient>
+  <linearGradient
+     id="b"
+     gradientUnits="userSpaceOnUse"
+     x1="1080"
+     x2="1080"
+     xlink:href="#a"
+     y1="31.7861"
+     y2="112.214" />
+  <linearGradient
+     id="c"
+     gradientUnits="userSpaceOnUse"
+     x1="1224"
+     x2="1224"
+     xlink:href="#a"
+     y1="24.856001"
+     y2="119.144" />
+  <linearGradient
+     id="d"
+     gradientUnits="userSpaceOnUse"
+     x1="1368"
+     x2="1368"
+     xlink:href="#a"
+     y1="19.1113"
+     y2="124.889" />
+  <linearGradient
+     id="e"
+     gradientUnits="userSpaceOnUse"
+     x1="1512"
+     x2="1512"
+     xlink:href="#a"
+     y1="14.4526"
+     y2="129.547" />
+  <linearGradient
+     id="f"
+     gradientUnits="userSpaceOnUse"
+     x1="1656"
+     x2="1656"
+     xlink:href="#a"
+     y1="10.7817"
+     y2="133.218" />
+  <linearGradient
+     id="g"
+     gradientUnits="userSpaceOnUse"
+     x1="1800"
+     x2="1800"
+     xlink:href="#a"
+     y1="8"
+     y2="136" />
+  <linearGradient
+     id="h"
+     gradientUnits="userSpaceOnUse"
+     x1="1944"
+     x2="1944"
+     xlink:href="#a"
+     y1="6.0082998"
+     y2="137.992" />
+  <linearGradient
+     id="i"
+     gradientUnits="userSpaceOnUse"
+     x1="2088"
+     x2="2088"
+     xlink:href="#a"
+     y1="4.7080102"
+     y2="139.29201" />
+  <linearGradient
+     id="j"
+     gradientUnits="userSpaceOnUse"
+     x1="2232"
+     x2="2232"
+     xlink:href="#a"
+     y1="4"
+     y2="140" />
+  <linearGradient
+     id="k"
+     gradientUnits="userSpaceOnUse"
+     x1="2376"
+     x2="2376"
+     xlink:href="#a"
+     y1="3.78613"
+     y2="140.214" />
+  <linearGradient
+     id="l"
+     gradientUnits="userSpaceOnUse"
+     x1="2520"
+     x2="2520"
+     xlink:href="#a"
+     y1="3.9672899"
+     y2="140.033" />
+  <linearGradient
+     id="m"
+     gradientUnits="userSpaceOnUse"
+     x1="2664"
+     x2="2664"
+     xlink:href="#a"
+     y1="4.4443402"
+     y2="139.55499" />
+  <linearGradient
+     id="n"
+     gradientUnits="userSpaceOnUse"
+     x1="2808"
+     x2="2808"
+     xlink:href="#a"
+     y1="5.1191401"
+     y2="138.88" />
+  <linearGradient
+     id="o"
+     gradientUnits="userSpaceOnUse"
+     x1="2952"
+     x2="2952"
+     xlink:href="#a"
+     y1="5.8930702"
+     y2="138.10699" />
+  <linearGradient
+     id="p"
+     gradientUnits="userSpaceOnUse"
+     x1="3096"
+     x2="3096"
+     xlink:href="#a"
+     y1="6.6665001"
+     y2="137.33299" />
+  <linearGradient
+     id="q"
+     gradientUnits="userSpaceOnUse"
+     x1="3240"
+     x2="3240"
+     xlink:href="#a"
+     y1="7.3418002"
+     y2="136.659" />
+  <linearGradient
+     id="r"
+     gradientUnits="userSpaceOnUse"
+     x1="3384"
+     x2="3384"
+     xlink:href="#a"
+     y1="7.81885"
+     y2="136.181" />
+  <linearGradient
+     id="s"
+     gradientUnits="userSpaceOnUse"
+     x1="3528"
+     x2="3528"
+     xlink:href="#a"
+     y1="8"
+     y2="136" />
+  <linearGradient
+     id="t"
+     gradientUnits="userSpaceOnUse"
+     x1="3672"
+     x2="3672"
+     xlink:href="#a"
+     y1="8"
+     y2="136" />
+  <linearGradient
+     id="u"
+     gradientUnits="userSpaceOnUse"
+     x1="3816"
+     x2="3816"
+     xlink:href="#a"
+     y1="8"
+     y2="136" />
+  <linearGradient
+     id="v"
+     gradientUnits="userSpaceOnUse"
+     x1="3960"
+     x2="3960"
+     xlink:href="#a"
+     y1="8"
+     y2="136" />
+  <linearGradient
+     id="w"
+     gradientUnits="userSpaceOnUse"
+     x1="4104"
+     x2="4104"
+     xlink:href="#a"
+     y1="8"
+     y2="136" />
+  <linearGradient
+     id="x"
+     gradientUnits="userSpaceOnUse"
+     x1="4248"
+     x2="4248"
+     xlink:href="#a"
+     y1="8"
+     y2="136" />
+  <linearGradient
+     id="y"
+     gradientUnits="userSpaceOnUse"
+     x1="4392"
+     x2="4392"
+     xlink:href="#a"
+     y1="8"
+     y2="136"
+     gradientTransform="translate(-4328,-8)" />
+  <path
+     d="M 64,0 C 47.03,0 30.74,6.747 18.75,18.745 6.75,30.743 0,47.033 0,64 0,80.967 6.75,97.257 18.75,109.255 30.74,121.253 47.03,128 64,128 80.97,128 97.26,121.253 109.25,109.255 121.25,97.257 128,80.967 128,64 128,47.033 121.25,30.743 109.25,18.745 97.26,6.747 80.97,0 64,0 Z"
+     fill="url(#y)"
+     id="path274"
+     style="fill:url(#y)" />
+  <path
+     d="m 28.97,63.3238 c 18.66,-8.128 31.1,-13.487 37.32,-16.076 17.78,-7.393 21.47,-8.677 23.88,-8.72 0.53,-0.009 1.71,0.122 2.48,0.745 0.64,0.525 0.82,1.235 0.91,1.733 0.08,0.498 0.19,1.633 0.1,2.519 -0.96,10.12 -5.13,34.678 -7.25,46.013 -0.89,4.7962 -2.66,6.4042 -4.37,6.5612 -3.72,0.342 -6.54,-2.456 -10.14,-4.8152 -5.63,-3.693 -8.81,-5.991 -14.28,-9.594 -6.32,-4.164 -2.22,-6.453 1.38,-10.193 0.94,-0.979 17.32,-15.874 17.63,-17.225 0.04,-0.169 0.08,-0.799 -0.3,-1.131 -0.37,-0.333 -0.92,-0.219 -1.32,-0.129 -0.57,0.128 -9.56,6.076 -27,17.843 -2.55,1.754 -4.86,2.609 -6.94,2.564 -2.28,-0.049 -6.68,-1.292 -9.95,-2.354 -4,-1.303 -7.19,-1.992 -6.91,-4.205 0.14,-1.152 1.73,-2.331 4.76,-3.536 z"
+     fill="#ffffff"
+     id="path276" />
+</svg>
