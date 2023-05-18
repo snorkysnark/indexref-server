@@ -57,3 +57,8 @@ export function createNodes() {
         };
     });
 }
+
+export async function getNodeData(nodeId: number) {
+    const response = await fetch(`${base}/node/${nodeId}`);
+    return await response.json();
+}
