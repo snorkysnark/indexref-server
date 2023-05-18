@@ -5,3 +5,7 @@
 html, body {
     overflow: hidden;
 }
+
+.link {
+    @apply text-blue-800 hover:underline;
+}
