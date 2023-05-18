@@ -1,11 +1,25 @@
 import NodeIcon from "./NodeIcon";
-import { NodeRel } from "./server";
+import { GetSet } from "./signals/getset";
+import { NodeRel } from "./signals/server";
 
-export default function NodeLabel(props: { node: NodeRel }) {
+export default function NodeLabel(props: {
+    node: NodeRel;
+    selectedId: GetSet<number>;
+}) {
+    const selected = () => props.selectedId.get() === props.node.id;
+
     return (
-        <p class="h-[1lh] select-none overflow-hidden whitespace-nowrap text-ellipsis">
+        <p
+            class="h-[1lh] select-none overflow-hidden whitespace-nowrap \
+            text-ellipsis cursor-pointer"
+            classList={{
+                "bg-white hover:bg-blue-200": !selected(),
+                "bg-blue-300": selected(),
+            }}
+            onClick={[props.selectedId.set, props.node.id]}
+        >
             <NodeIcon type={props.node.type} />
             <span class="pl-2">{props.node.title}</span>
         </p>
-    )
+    );
 }
