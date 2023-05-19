@@ -39,6 +39,7 @@ mod sources {
         telegram_chat: Option<PathBuf>,
         single_file_z: Option<PathBuf>,
         scrapbook: Option<PathBuf>,
+        onetab: Option<PathBuf>,
     }
 
     #[derive(Debug, thiserror::Error)]
@@ -65,6 +66,7 @@ mod sources {
                 SourceFolderType::Telegram => config_value!(self, telegram_chat)?,
                 SourceFolderType::SingleFileZ => config_value!(self, single_file_z)?,
                 SourceFolderType::Scrapbook => config_value!(self, scrapbook)?,
+                SourceFolderType::OneTab => config_value!(self, onetab)?,
             })
         }
     }
@@ -81,5 +83,6 @@ mod sources {
         getter!(telegram_chat);
         getter!(single_file_z);
         getter!(scrapbook);
+        getter!(onetab);
     }
 }

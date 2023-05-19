@@ -16,6 +16,8 @@ pub enum NodeType {
     SingleFileZ,
     #[sea_orm(string_value = "Scrapbook")]
     Scrapbook,
+    #[sea_orm(string_value = "OneTab")]
+    OneTab,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]
@@ -36,6 +38,8 @@ pub enum SourceFolderType {
     SingleFileZ,
     #[sea_orm(string_value = "Scrapbook")]
     Scrapbook,
+    #[sea_orm(string_value = "OneTab")]
+    OneTab,
 }
 
 impl SourceFolderType {
@@ -44,6 +48,7 @@ impl SourceFolderType {
             SourceFolderType::Telegram => "telegram",
             SourceFolderType::SingleFileZ => "single_file_z",
             SourceFolderType::Scrapbook => "scrapbook",
+            SourceFolderType::OneTab => "onetab",
         }
     }
 }
