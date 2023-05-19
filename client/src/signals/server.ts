@@ -7,7 +7,8 @@ export type NodeType =
     | "Folder"
     | "Telegram"
     | "SingleFileZ"
-    | "Scrapbook";
+    | "Scrapbook"
+    | "OneTab";
 
 interface _Node<DATE> {
     id: number;
