@@ -4,6 +4,7 @@ use hyper::StatusCode;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 
+use crate::config::AppConfig;
 use crate::{config::SourcesConfig, entity::node, AppState};
 
 pub use self::node_data::{get_node_full, get_node_full_handler};
@@ -44,7 +45,7 @@ pub async fn get_nodes(
 }
 
 pub async fn get_nodes_handler(state: State<AppState>) -> Response {
-    match get_nodes(&state.db, &state.sources).await {
+    match get_nodes(&state.db, &state.config.sources).await {
         Ok(value) => Json(value).into_response(),
         Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response(),
     }
@@ -52,26 +53,32 @@ pub async fn get_nodes_handler(state: State<AppState>) -> Response {
 
 pub async fn rebuild_index(
     db: &DatabaseConnection,
-    sources: &SourcesConfig,
+    config: &AppConfig,
 ) -> eyre::Result<Vec<node::Model>> {
     // Clear existing index
     Migrator::fresh(db).await?;
 
     let mut inserted_nodes = vec![];
 
-    if let Some(telegram_chat) = sources.telegram_chat() {
+    if let Some(telegram_chat) = config.sources.telegram_chat() {
         inserted_nodes.append(&mut self::telegram::insert_from_folder(db, telegram_chat).await?);
     }
-    if let Some(single_file_z) = sources.single_file_z() {
-        inserted_nodes
-            .append(&mut self::single_file_z::insert_from_folder(db, single_file_z).await?);
+    if let Some(single_file_z) = config.sources.single_file_z() {
+        inserted_nodes.append(
+            &mut self::single_file_z::insert_from_folder(
+                db,
+                single_file_z,
+                &config.settings.single_file_z,
+            )
+            .await?,
+        );
     }
-    if let Some(scrapbook) = sources.scrapbook() {
+    if let Some(scrapbook) = config.sources.scrapbook() {
         inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
     }
-    if let Some(onetab) = sources.onetab() {
-        inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
-    }
+    // if let Some(onetab) = sources.onetab() {
+    //     inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
+    // }
 
     Ok(inserted_nodes)
 }

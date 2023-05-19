@@ -28,7 +28,7 @@ async fn serve_file(
     state: State<AppState>,
     Path((type_name, rel_path)): Path<(String, RelativePathBuf)>,
 ) -> Result<impl IntoResponse, ServeFileError> {
-    let base_path = state.sources.get_base_path(
+    let base_path = state.config.sources.get_base_path(
         SourceFolderType::from_url_name(&type_name)
             .ok_or(ServeFileError::UnknownContainerName(type_name))?,
     )?;

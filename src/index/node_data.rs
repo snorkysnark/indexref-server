@@ -83,7 +83,7 @@ pub async fn get_node_full(
 }
 
 pub async fn get_node_full_handler(state: State<AppState>, Path(id): Path<i32>) -> Response {
-    match get_node_full(&state.db, &state.sources, id).await {
+    match get_node_full(&state.db, &state.config.sources, id).await {
         Ok(value) => Json(value).into_response(),
         Err(err) => {
             let status = match err {
