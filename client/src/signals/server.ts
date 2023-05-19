@@ -28,6 +28,11 @@ interface _NodeRel<DATE> extends _Node<DATE> {
 export type Node = _Node<Date>;
 export type NodeRel = _NodeRel<Date>;
 
+export interface NodeExpanded {
+    node: Node;
+    data: any;
+}
+
 export interface NodeResourceReturn {
     nodes: NodeRel[];
     nodeById: Map<number, NodeRel>;
@@ -58,7 +63,7 @@ export function createNodes() {
     });
 }
 
-export async function getNodeData(nodeId: number) {
+export async function getNodeData(nodeId: number): Promise<NodeExpanded> {
     const response = await fetch(`${base}/node/${nodeId}`);
     return await response.json();
 }

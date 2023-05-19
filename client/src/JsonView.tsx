@@ -7,26 +7,29 @@ import { defineDataType, JsonViewer, stringType } from "@textea/json-viewer";
 
 const linkType = defineDataType({
     ...stringType,
-    is(value) {
-        if (typeof value !== "string") return false;
-        try {
-            new URL(value);
-        } catch {
+    is(value, path) {
+        if (typeof value === "string") {
+            return (
+                /^https?:\/\//.test(value) ||
+                (path.length === 2 &&
+                    path[0] === "node" &&
+                    path[1] === "file_proxy")
+            );
+        } else {
             return false;
         }
-        return true;
     },
     Component: (props) => {
         const url = props.value.toString();
         return React.createElement(
             "a",
-            { href: url, target: "_blank", class: "link" },
+            { href: url, target: "_blank", className: "link" },
             url
         );
     },
 });
 
-export default function JsonView(props: { value: object }) {
+export default function JsonView(props: { value: any }) {
     const [container, setContainer] = createSignal<HTMLElement>();
     const root = createMemo(() => {
         if (container()) {
