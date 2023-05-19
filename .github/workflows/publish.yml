@@ -17,13 +17,13 @@ jobs:
         include:
           - os: ubuntu-latest
             binary: $APPNAME
-            asset_name: $APPNAME-linux.zip
+            asset_name: ${{ env.APPNAME }}-linux.zip
           - os: windows-latest
-            binary: $APPNAME.exe
-            asset_name: $APPNAME-windows.zip
+            binary: ${{ env.APPNAME }}.exe
+            asset_name: ${{ env.APPNAME }}-windows.zip
           - os: macos-latest
-            binary: $APPNAME
-            asset_name: $APPNAME-macos.zip
+            binary: ${{ env.APPNAME }}
+            asset_name: ${{ env.APPNAME }}-macos.zip
 
     steps:
     - uses: actions/checkout@v3
