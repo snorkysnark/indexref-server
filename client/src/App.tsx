@@ -10,7 +10,7 @@ export default function App() {
 
     return (
         <div class="flex h-screen">
-            <div class="w-1/2 overflow-y-scroll">
+            <div class="w-1/2 overflow-y-scroll pb-4">
                 <Show when={nodes()}>
                     <NodeTree nodes={nodes()} selectedId={selectedId} />
                 </Show>
