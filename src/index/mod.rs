@@ -76,9 +76,9 @@ pub async fn rebuild_index(
     if let Some(scrapbook) = config.sources.scrapbook() {
         inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
     }
-    // if let Some(onetab) = sources.onetab() {
-    //     inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
-    // }
+    if let Some(onetab) = config.sources.onetab() {
+        inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
+    }
 
     Ok(inserted_nodes)
 }

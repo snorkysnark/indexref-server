@@ -1,5 +1,8 @@
 use std::path::Path;
 
+use chrono::NaiveDateTime;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::Deserialize;
 use walkdir::WalkDir;
@@ -12,6 +15,9 @@ use crate::{
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
 };
+
+static DATE_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^\[\[OneTab\]\] (\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})").unwrap());
 
 #[derive(Debug, Deserialize)]
 struct OnetabBlock {
@@ -53,6 +59,16 @@ pub async fn insert_from_folder(
 
         for block in blocks {
             for date_block in block.children {
+                let date_str = DATE_REGEX
+                    .captures_iter(&date_block.string)
+                    .next()
+                    .ok_or_else(|| eyre::eyre!("Unexpected date string: {}", date_block.string))?
+                    .get(1)
+                    .unwrap()
+                    .as_str();
+
+                let created = NaiveDateTime::parse_from_str(date_str, "%Y-%m-%d_%H-%M-%S")?;
+
                 for link in date_block.children {
                     let (url, title) = link.children;
 
@@ -62,6 +78,7 @@ pub async fn insert_from_folder(
                         title: Set(Some(title.string)),
                         url: Set(Some(url.string)),
                         file: Set(Some(relative_path.clone().into())),
+                        created: Set(Some(created)),
                         ..Default::default()
                     }
                     .insert(db)
