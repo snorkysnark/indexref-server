@@ -1,11 +1,16 @@
 use std::path::Path;
 
+use chrono::NaiveDateTime;
+use eyre::Context;
 use fs_err as fs;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 
 use crate::{
+    config::SingleFileZImportSettings,
     entity::{
         node,
         types::{NodeType, SourceFolderType},
@@ -14,9 +19,13 @@ use crate::{
     path_convert::ToRelativePath,
 };
 
+static DATE_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\((\d{2}\.\d{2}.\d{4} \d{2}_\d{2}_\d{2})\)\.html$").unwrap());
+
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
     folder: &Path,
+    settings: &SingleFileZImportSettings,
 ) -> eyre::Result<Vec<node::Model>> {
     let sel_title = Selector::parse("title").unwrap();
     let sel_canonical_link = Selector::parse(r#"link[rel="canonical"]"#).unwrap();
@@ -46,8 +55,18 @@ pub async fn insert_from_folder(
             .next()
             .and_then(|el| el.value().attr("href"))
             .map(|str| str.to_owned());
-
-        // TODO: Extract date from filename
+        let created = settings
+            .date_regex
+            .as_ref()
+            .unwrap_or(&*DATE_REGEX)
+            .captures_iter(&entry.file_name().to_string_lossy())
+            .next()
+            .and_then(|captures| captures.get(1))
+            .map(|date| {
+                NaiveDateTime::parse_from_str(date.as_str(), "%d.%m.%Y %H_%M_%S")
+                    .with_context(|| date.as_str().to_owned())
+            })
+            .transpose()?;
 
         let inserted = node::ActiveModel {
             r#type: Set(NodeType::SingleFileZ),
@@ -55,6 +74,7 @@ pub async fn insert_from_folder(
             title: Set(title),
             url: Set(url),
             file: Set(Some(relative_path.into())),
+            created: Set(created),
             ..Default::default()
         }
         .insert(db)

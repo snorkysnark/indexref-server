@@ -11,7 +11,7 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use axum::{routing::get, Router};
 use clap::{Parser, Subcommand};
 use color_eyre::Help;
-use config::{AppConfig, SourcesConfig};
+use config::AppConfig;
 use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection};
 
@@ -37,7 +37,7 @@ const LOCALHOST: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
 #[derive(Debug, Clone)]
 pub struct AppState {
     db: DatabaseConnection,
-    sources: SourcesConfig,
+    config: AppConfig,
 }
 
 #[tokio::main]
@@ -55,7 +55,7 @@ async fn main() -> eyre::Result<()> {
 
     match cli.command {
         Commands::Index => {
-            index::rebuild_index(&db, &config.sources).await?;
+            index::rebuild_index(&db, &config).await?;
         }
         Commands::Serve => {
             Migrator::up(&db, None)
@@ -77,7 +77,7 @@ async fn main() -> eyre::Result<()> {
                 .route("/files/:node_type/*path", get(index::serve_file_handler))
                 .with_state(AppState {
                     db,
-                    sources: config.sources,
+                    config: config.clone(),
                 })
                 .layer(CorsLayer::new().allow_origin(cors::Any));
 
