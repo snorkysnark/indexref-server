@@ -16,14 +16,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            binary: $APPNAME
-            asset_name: ${{ env.APPNAME }}-linux.zip
+            binary: indexref-server
+            asset_name: indexref-linux.zip
           - os: windows-latest
-            binary: ${{ env.APPNAME }}.exe
-            asset_name: ${{ env.APPNAME }}-windows.zip
+            binary: indexref-server.exe
+            asset_name: indexref-windows.zip
           - os: macos-latest
-            binary: ${{ env.APPNAME }}
-            asset_name: ${{ env.APPNAME }}-macos.zip
+            binary: indexref-server
+            asset_name: indexref-macos.zip
 
     steps:
     - uses: actions/checkout@v3
