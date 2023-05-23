@@ -1,11 +1,14 @@
 mod single_file_z;
+mod zotero;
 
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 
 use crate::entity::types::SourceFolderType;
-pub use self::single_file_z::SingleFileZConfig;
+
+pub use self::single_file_z::*;
+pub use self::zotero::*;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SourcesConfig {
@@ -13,6 +16,7 @@ pub struct SourcesConfig {
     single_file_z: Option<SingleFileZConfig>,
     scrapbook: Option<PathBuf>,
     onetab: Option<PathBuf>,
+    zotero: Option<Vec<ZoteroSource>>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -52,5 +56,8 @@ impl SourcesConfig {
     }
     pub fn onetab(&self) -> Option<&Path> {
         self.onetab.as_deref()
+    }
+    pub fn zotero(&self) -> Option<&Vec<ZoteroSource>> {
+        self.zotero.as_ref()
     }
 }

@@ -5,6 +5,7 @@ import scrapbookIcon from "./icons/scrapbookx_32.png";
 import telegramIcon from "./icons/t_logo_sprite.svg";
 import singleFileZIcon from "./icons/singlefilez_128.png";
 import onetabIcon from "./icons/onetab-icon128.png";
+import zoteroIcon from "./icons/Zotero.png";
 
 export default function NodeIcon(props: { type: NodeType }) {
     return (
@@ -45,6 +46,13 @@ export default function NodeIcon(props: { type: NodeType }) {
                     class="h-[1lh] inline-block"
                     src={onetabIcon}
                     alt="OneTab"
+                />
+            </Match>
+            <Match when={props.type === "Zotero"}>
+                <img
+                    class="h-[1lh] inline-block"
+                    src={zoteroIcon}
+                    alt="Zotero"
                 />
             </Match>
         </Switch>
