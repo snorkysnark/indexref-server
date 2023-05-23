@@ -3,17 +3,14 @@ mod sources;
 use std::path::Path;
 
 use fs_err as fs;
-use regex::Regex;
 use serde::Deserialize;
 
-pub use self::sources::{BasePathError, SourcesConfig};
+pub use self::sources::{BasePathError, SingleFileZConfig, SourcesConfig};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {
     pub sources: SourcesConfig,
     pub server: ServerConfig,
-    #[serde(default)]
-    pub settings: ImportSettings,
 }
 
 impl AppConfig {
@@ -31,15 +28,4 @@ impl ServerConfig {
     pub fn port(&self) -> u16 {
         self.port
     }
-}
-
-#[derive(Debug, Clone, Default, Deserialize)]
-pub struct ImportSettings {
-    pub single_file_z: SingleFileZImportSettings,
-}
-
-#[derive(Debug, Clone, Default, Deserialize)]
-pub struct SingleFileZImportSettings {
-    #[serde(with = "serde_regex")]
-    pub date_regex: Option<Regex>,
 }

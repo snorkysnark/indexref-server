@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use chrono::NaiveDateTime;
 use eyre::Context;
 use fs_err as fs;
@@ -10,7 +8,7 @@ use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 
 use crate::{
-    config::SingleFileZImportSettings,
+    config::SingleFileZConfig,
     entity::{
         node,
         types::{NodeType, SourceFolderType},
@@ -24,20 +22,19 @@ static DATE_REGEX: Lazy<Regex> =
 
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
-    folder: &Path,
-    settings: &SingleFileZImportSettings,
+    config: &SingleFileZConfig,
 ) -> eyre::Result<Vec<node::Model>> {
     let sel_title = Selector::parse("title").unwrap();
     let sel_canonical_link = Selector::parse(r#"link[rel="canonical"]"#).unwrap();
 
     let mut inserted_nodes = vec![];
 
-    for entry in WalkDir::new(folder)
+    for entry in WalkDir::new(config.path())
         .into_iter()
         .filter_map(|result| result.ok_log_errors())
         .filter(|e| matches!(e.path().extension_str(), Some("html")))
     {
-        let relative_path = entry.path().to_relative_path(folder)?;
+        let relative_path = entry.path().to_relative_path(config.path())?;
 
         // The 'zip' portion of the file is NOT valid UTF-8,
         // so we have to use lossy conversion
@@ -55,9 +52,8 @@ pub async fn insert_from_folder(
             .next()
             .and_then(|el| el.value().attr("href"))
             .map(|str| str.to_owned());
-        let created = settings
-            .date_regex
-            .as_ref()
+        let created = config
+            .date_regex()
             .unwrap_or(&*DATE_REGEX)
             .captures_iter(&entry.file_name().to_string_lossy())
             .next()
