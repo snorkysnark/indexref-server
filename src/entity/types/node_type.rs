@@ -18,6 +18,8 @@ pub enum NodeType {
     Scrapbook,
     #[sea_orm(string_value = "OneTab")]
     OneTab,
+    #[sea_orm(string_value = "Zotero")]
+    Zotero,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]

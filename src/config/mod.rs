@@ -5,7 +5,7 @@ use std::path::Path;
 use fs_err as fs;
 use serde::Deserialize;
 
-pub use self::sources::{BasePathError, SingleFileZConfig, SourcesConfig};
+pub use self::sources::*;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AppConfig {

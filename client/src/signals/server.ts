@@ -8,7 +8,8 @@ export type NodeType =
     | "Telegram"
     | "SingleFileZ"
     | "Scrapbook"
-    | "OneTab";
+    | "OneTab"
+    | "Zotero";
 
 interface _Node<DATE> {
     id: number;
