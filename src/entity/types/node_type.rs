@@ -29,6 +29,8 @@ pub enum AttachedTableType {
     Telegram,
     #[sea_orm(string_value = "Scrapbook")]
     Scrapbook,
+    #[sea_orm(string_value = "Zotero")]
+    Zotero,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]

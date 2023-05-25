@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use crate::{
     config::SourcesConfig,
-    entity::{node, scrapbook, telegram, types::AttachedTableType},
+    entity::{node, scrapbook, telegram, types::AttachedTableType, zotero},
     AppState,
 };
 
@@ -19,7 +19,7 @@ use super::node_presentation::NodePresentation;
 #[derive(Debug, Serialize)]
 pub struct NodeExpanded<M> {
     node: M,
-    data: NodeData,
+    data: Option<NodeData>,
 }
 
 #[derive(Debug, Serialize)]
@@ -27,7 +27,7 @@ pub struct NodeExpanded<M> {
 pub enum NodeData {
     Telegram(telegram::Model),
     Scrapbook(scrapbook::Model),
-    Empty,
+    Zotero(zotero::Model),
 }
 
 #[derive(Debug, Error)]
@@ -54,24 +54,30 @@ pub async fn get_node_full(
         .one(db)
         .await?
         .ok_or(NodeDataError::NodeNotFound { id })?;
+
     let node_data = match node_model.attached_table {
-        Some(AttachedTableType::Telegram) => {
-            NodeData::Telegram(telegram::Entity::find_by_id(id).one(db).await?.ok_or(
-                NodeDataError::NodeDataNotFound {
-                    id,
-                    attached_table: AttachedTableType::Telegram,
-                },
-            )?)
+        Some(table_type) => {
+            let node_data = match table_type {
+                AttachedTableType::Telegram => telegram::Entity::find_by_id(id)
+                    .one(db)
+                    .await?
+                    .map(NodeData::Telegram),
+                AttachedTableType::Scrapbook => scrapbook::Entity::find_by_id(id)
+                    .one(db)
+                    .await?
+                    .map(NodeData::Scrapbook),
+                AttachedTableType::Zotero => zotero::Entity::find_by_id(id)
+                    .one(db)
+                    .await?
+                    .map(NodeData::Zotero),
+            };
+
+            Some(node_data.ok_or(NodeDataError::NodeDataNotFound {
+                id,
+                attached_table: table_type,
+            })?)
         }
-        Some(AttachedTableType::Scrapbook) => {
-            NodeData::Scrapbook(scrapbook::Entity::find_by_id(id).one(db).await?.ok_or(
-                NodeDataError::NodeDataNotFound {
-                    id,
-                    attached_table: AttachedTableType::Scrapbook,
-                },
-            )?)
-        }
-        None => NodeData::Empty,
+        None => None,
     };
 
     Ok(NodeExpanded {
