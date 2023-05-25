@@ -5,5 +5,6 @@ pub mod prelude;
 pub mod node;
 pub mod telegram;
 pub mod scrapbook;
+pub mod zotero;
 
 pub mod types;

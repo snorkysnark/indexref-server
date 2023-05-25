@@ -1,5 +1,3 @@
-use std::println;
-
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, Json};
 use hyper::StatusCode;

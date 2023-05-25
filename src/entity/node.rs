@@ -35,6 +35,8 @@ pub enum Relation {
     Scrapbook,
     #[sea_orm(has_many = "super::telegram::Entity")]
     Telegram,
+    #[sea_orm(has_many = "super::zotero::Entity")]
+    Zotero,
 }
 
 impl Related<super::telegram::Entity> for Entity {
@@ -46,6 +48,12 @@ impl Related<super::telegram::Entity> for Entity {
 impl Related<super::scrapbook::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Scrapbook.def()
+    }
+}
+
+impl Related<super::zotero::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Zotero.def()
     }
 }
 

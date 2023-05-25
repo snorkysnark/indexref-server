@@ -1,6 +1,6 @@
-use std::{collections::HashMap, println};
+use std::collections::HashMap;
 
-use eyre::{eyre, ContextCompat};
+use eyre::ContextCompat;
 use hyper::HeaderMap;
 use reqwest::Client;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
@@ -9,19 +9,21 @@ use serde_json::Value as JsonValue;
 
 use crate::{
     config::{ZoteroSource, ZoteroSourceType},
-    entity::{node, types::NodeType},
+    entity::{
+        node,
+        types::{AttachedTableType, NodeType},
+        zotero,
+    },
 };
-
-type Map<T> = HashMap<String, T>;
 
 #[derive(Debug, Deserialize)]
 struct ZoteroItem {
     key: String,
     version: i32,
     library: ZoteroLibrary,
-    links: Map<ZoteroLink>,
-    meta: Map<JsonValue>,
-    data: Map<JsonValue>,
+    links: JsonValue,
+    meta: JsonValue,
+    data: JsonValue,
 }
 
 #[derive(Debug, Deserialize)]
@@ -29,13 +31,7 @@ struct ZoteroLibrary {
     r#type: String,
     id: i32,
     name: String,
-    links: Map<ZoteroLink>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ZoteroLink {
-    href: String,
-    r#type: String,
+    links: JsonValue,
 }
 
 impl ZoteroSource {
@@ -86,16 +82,30 @@ pub async fn insert_from_source(
             .data
             .get("title")
             .or(item.data.get("annotationText"))
-            .or(item.data.get("annotationComment"))
             .map(string_value)
             .transpose()?;
         let parent_key = item.data.get("parentItem").map(string_value).transpose()?;
 
         let node_inserted = node::ActiveModel {
             r#type: Set(NodeType::Zotero),
+            attached_table: Set(Some(AttachedTableType::Zotero)),
             title: Set(title),
             original_id: Set(Some(item.key.clone())),
             ..Default::default()
+        }
+        .insert(db)
+        .await?;
+
+        zotero::ActiveModel {
+            node_id: Set(node_inserted.id),
+            version: Set(item.version),
+            library_type: Set(item.library.r#type),
+            library_id: Set(item.library.id),
+            library_name: Set(item.library.name),
+            library_links: Set(item.library.links),
+            links: Set(item.links),
+            meta: Set(item.meta),
+            data: Set(item.data),
         }
         .insert(db)
         .await?;
