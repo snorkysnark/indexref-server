@@ -8,10 +8,7 @@ use serde::Deserialize;
 use walkdir::WalkDir;
 
 use crate::{
-    entity::{
-        node,
-        types::{NodeType, SourceFolderType},
-    },
+    entity::{node, types::NodeType},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
 };
@@ -74,7 +71,6 @@ pub async fn insert_from_folder(
 
                     let inserted = node::ActiveModel {
                         r#type: Set(NodeType::OneTab),
-                        source_folder: Set(Some(SourceFolderType::OneTab)),
                         title: Set(Some(title.string)),
                         url: Set(Some(url.string)),
                         file: Set(Some(relative_path.clone().into())),
