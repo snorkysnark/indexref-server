@@ -9,10 +9,7 @@ use walkdir::WalkDir;
 
 use crate::{
     config::SingleFileZConfig,
-    entity::{
-        node,
-        types::{NodeType, SourceFolderType},
-    },
+    entity::{node, types::NodeType},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
 };
@@ -66,7 +63,6 @@ pub async fn insert_from_folder(
 
         let inserted = node::ActiveModel {
             r#type: Set(NodeType::SingleFileZ),
-            source_folder: Set(Some(SourceFolderType::SingleFileZ)),
             title: Set(title),
             url: Set(url),
             file: Set(Some(relative_path.into())),

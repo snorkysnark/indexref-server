@@ -15,10 +15,7 @@ use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
 
 use crate::{
-    entity::{
-        node, scrapbook,
-        types::{AttachedTableType, NodeType, SourceFolderType},
-    },
+    entity::{node, scrapbook, types::NodeType},
     ext::ResultExt,
     path_convert::ToRelativePath,
 };
@@ -152,15 +149,8 @@ async fn insert_one(
         }
     }
 
-    let node_type = match description.r#type.as_str() {
-        "folder" => NodeType::Folder,
-        _ => NodeType::Scrapbook,
-    };
-
     let inserted_node = node::ActiveModel {
-        r#type: Set(node_type),
-        source_folder: Set(Some(SourceFolderType::Scrapbook)),
-        attached_table: Set(Some(AttachedTableType::Scrapbook)),
+        r#type: Set(NodeType::Scrapbook),
         title: Set(none_if_empty(description.title.clone())),
         url: Set(none_if_empty(description.source.clone())),
         file: Set(rel_path.map(Into::into)),

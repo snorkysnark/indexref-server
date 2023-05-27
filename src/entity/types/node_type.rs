@@ -8,8 +8,6 @@ use crate::macros::from_to_str;
 pub enum NodeType {
     #[sea_orm(string_value = "Root")]
     Root,
-    #[sea_orm(string_value = "Folder")]
-    Folder,
     #[sea_orm(string_value = "Telegram")]
     Telegram,
     #[sea_orm(string_value = "SingleFileZ")]
@@ -22,28 +20,42 @@ pub enum NodeType {
     Zotero,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]
-#[sea_orm(rs_type = "String", db_type = "String(None)")]
+#[derive(Clone, Copy, Debug)]
 pub enum AttachedTableType {
-    #[sea_orm(string_value = "Telegram")]
     Telegram,
-    #[sea_orm(string_value = "Scrapbook")]
     Scrapbook,
-    #[sea_orm(string_value = "Zotero")]
     Zotero,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize)]
-#[sea_orm(rs_type = "String", db_type = "String(None)")]
+impl NodeType {
+    pub fn attached_table_type(&self) -> Option<AttachedTableType> {
+        match self {
+            Self::Telegram => Some(AttachedTableType::Telegram),
+            Self::Scrapbook => Some(AttachedTableType::Scrapbook),
+            Self::Zotero => Some(AttachedTableType::Zotero),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum SourceFolderType {
-    #[sea_orm(string_value = "Telegram")]
     Telegram,
-    #[sea_orm(string_value = "SingleFileZ")]
     SingleFileZ,
-    #[sea_orm(string_value = "Scrapbook")]
     Scrapbook,
-    #[sea_orm(string_value = "OneTab")]
     OneTab,
+}
+
+impl NodeType {
+    pub fn source_folder_type(&self) -> Option<SourceFolderType> {
+        match self {
+            Self::Telegram => Some(SourceFolderType::Telegram),
+            Self::SingleFileZ => Some(SourceFolderType::SingleFileZ),
+            Self::Scrapbook => Some(SourceFolderType::Scrapbook),
+            Self::OneTab => Some(SourceFolderType::OneTab),
+            _ => None,
+        }
+    }
 }
 
 impl SourceFolderType {

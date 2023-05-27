@@ -34,7 +34,7 @@ pub enum NodeData {
 pub enum NodeDataError {
     #[error("Node not found: {id}")]
     NodeNotFound { id: i32 },
-    #[error("Node data not found: {id} {attached_table}")]
+    #[error("Node data not found: {id} {attached_table:?}")]
     NodeDataNotFound {
         id: i32,
         attached_table: AttachedTableType,
@@ -55,7 +55,7 @@ pub async fn get_node_full(
         .await?
         .ok_or(NodeDataError::NodeNotFound { id })?;
 
-    let node_data = match node_model.attached_table {
+    let node_data = match node_model.r#type.attached_table_type() {
         Some(table_type) => {
             let node_data = match table_type {
                 AttachedTableType::Telegram => telegram::Entity::find_by_id(id)

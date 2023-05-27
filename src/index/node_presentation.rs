@@ -16,6 +16,7 @@ use super::types::StringVec;
 pub struct NodePresentation {
     pub id: i32,
     pub r#type: NodeType,
+    pub subtype: Option<String>,
     pub title: Option<String>,
     pub url: Option<String>,
     pub created: Option<NaiveDateTime>,
@@ -28,7 +29,10 @@ impl node::Model {
     pub fn into_presentation(self, sources: &SourcesConfig) -> eyre::Result<NodePresentation> {
         let (file, file_proxy) = match self.file {
             Some(rel_path) => {
-                let source_folder = self.source_folder.context("Node has no source folder")?;
+                let source_folder = self
+                    .r#type
+                    .source_folder_type()
+                    .context("Node has no source folder")?;
                 let base_path = sources.get_base_path(source_folder)?;
 
                 let full_path = rel_path.0.to_path(base_path);
@@ -45,6 +49,7 @@ impl node::Model {
 
         Ok(NodePresentation {
             id: self.id,
+            subtype: self.subtype,
             r#type: self.r#type,
             title: self.title,
             url: self.url,

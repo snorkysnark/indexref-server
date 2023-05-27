@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, NaiveDateTime};
+use chrono::DateTime;
 use eyre::ContextCompat;
 use hyper::HeaderMap;
 use once_cell::sync::Lazy;
@@ -12,11 +12,7 @@ use serde_json::Value as JsonValue;
 
 use crate::{
     config::{ZoteroSource, ZoteroSourceType},
-    entity::{
-        node,
-        types::{AttachedTableType, NodeType},
-        zotero,
-    },
+    entity::{node, types::NodeType, zotero},
     ext::JsonValueExt,
 };
 
@@ -121,7 +117,6 @@ pub async fn insert_from_source(
         let node_inserted = node::ActiveModel {
             r#type: Set(NodeType::Zotero),
             created: Set(date_modified),
-            attached_table: Set(Some(AttachedTableType::Zotero)),
             title: Set(title),
             original_id: Set(Some(item.key.clone())),
             ..Default::default()
