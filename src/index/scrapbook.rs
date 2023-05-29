@@ -151,6 +151,7 @@ async fn insert_one(
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Scrapbook),
+        subtype: Set(none_if_empty(description.r#type.clone())),
         title: Set(none_if_empty(description.title.clone())),
         url: Set(none_if_empty(description.source.clone())),
         file: Set(rel_path.map(Into::into)),

@@ -105,6 +105,12 @@ pub async fn insert_from_source(
         }
 
         let title = extract_title(&item)?;
+        let item_type = item
+            .data
+            .get("itemType")
+            .and_then(|v| v.as_str())
+            .map(ToOwned::to_owned);
+
         let date_modified = item
             .data
             .get("dateModified")
@@ -116,6 +122,7 @@ pub async fn insert_from_source(
 
         let node_inserted = node::ActiveModel {
             r#type: Set(NodeType::Zotero),
+            subtype: Set(item_type),
             created: Set(date_modified),
             title: Set(title),
             original_id: Set(Some(item.key.clone())),
