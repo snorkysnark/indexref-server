@@ -1,3 +1,4 @@
+import { createEffect, createSignal } from "solid-js";
 import NodeIcon from "./NodeIcon";
 import { GetSet } from "./signals/getset";
 import { NodeRel } from "./signals/server";
@@ -7,6 +8,13 @@ export default function NodeLabel(props: {
     selectedId: GetSet<number>;
 }) {
     const selected = () => props.selectedId.get() === props.node.id;
+    const [element, setElement] = createSignal<HTMLElement>();
+
+    createEffect(() => {
+        if (selected() && element()) {
+            element().scrollIntoView({ block: "nearest" });
+        }
+    });
 
     return (
         <p
@@ -17,6 +25,7 @@ export default function NodeLabel(props: {
                 "bg-blue-300": selected(),
             }}
             onClick={[props.selectedId.set, props.node.id]}
+            ref={setElement}
         >
             <NodeIcon type={props.node.type} />
             <span class="pl-2">{props.node.title}</span>
