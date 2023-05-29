@@ -14,6 +14,7 @@ pub struct Model {
     pub subtype: Option<String>,
     pub title: Option<String>,
     pub url: Option<String>,
+    pub icon: Option<String>,
     pub created: Option<NaiveDateTime>,
     pub file: Option<RelativePathSql>,
     pub original_id: Option<String>,

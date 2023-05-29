@@ -14,8 +14,10 @@ export type NodeType =
 interface _Node<DATE> {
     id: number;
     type: NodeType;
+    subtype: string;
     title: string;
     url: string;
+    icon: string;
     created: DATE;
     file: string;
     file_proxy: string;
@@ -50,6 +52,9 @@ export function createNodes() {
                 ({
                     ...node,
                     created: node.created ? Date.parse(node.created) : null,
+                    icon: node.icon?.startsWith("/")
+                        ? base + node.icon
+                        : node.icon,
                 } as unknown as NodeRel)
         );
 

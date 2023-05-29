@@ -1,60 +1,31 @@
-import { Match, Switch } from "solid-js";
-import { NodeType } from "./signals/server";
-import { FaSolidFolder } from "solid-icons/fa";
+import { NodeRel } from "./signals/server";
 import scrapbookIcon from "./icons/scrapbookx_32.png";
 import telegramIcon from "./icons/t_logo_sprite.svg";
 import singleFileZIcon from "./icons/singlefilez_128.png";
 import onetabIcon from "./icons/onetab-icon128.png";
 import zoteroIcon from "./icons/Zotero.png";
 
-export default function NodeIcon(props: { type: NodeType }) {
+function getDefaultIcon(node: NodeRel) {
+    switch (node.type) {
+        case "Scrapbook":
+            return scrapbookIcon;
+        case "Telegram":
+            return telegramIcon;
+        case "SingleFileZ":
+            return singleFileZIcon;
+        case "OneTab":
+            return onetabIcon;
+        case "Zotero":
+            return zoteroIcon;
+    }
+}
+
+export default function NodeIcon(props: { node: NodeRel }) {
     return (
-        <Switch>
-            <Match when={props.type === "Folder"}>
-                <FaSolidFolder class="inline-block fill-yellow-300 scale-125" />
-            </Match>
-            <Match when={props.type === "Scrapbook"}>
-                <img
-                    class="h-[1lh] inline-block"
-                    src={scrapbookIcon}
-                    alt="Scrapbook"
-                />
-            </Match>
-            <Match when={props.type === "Scrapbook"}>
-                <img
-                    class="h-[1lh] inline-block"
-                    src={scrapbookIcon}
-                    alt="Scrapbook"
-                />
-            </Match>
-            <Match when={props.type === "Telegram"}>
-                <img
-                    class="h-[0.9lh] inline-block"
-                    src={telegramIcon}
-                    alt="Telegram"
-                />
-            </Match>
-            <Match when={props.type === "SingleFileZ"}>
-                <img
-                    class="h-[1lh] inline-block"
-                    src={singleFileZIcon}
-                    alt="SingleFileZ"
-                />
-            </Match>
-            <Match when={props.type === "OneTab"}>
-                <img
-                    class="h-[1lh] inline-block"
-                    src={onetabIcon}
-                    alt="OneTab"
-                />
-            </Match>
-            <Match when={props.type === "Zotero"}>
-                <img
-                    class="h-[1lh] inline-block"
-                    src={zoteroIcon}
-                    alt="Zotero"
-                />
-            </Match>
-        </Switch>
+        <img
+            class="h-[1lh] inline-block"
+            src={props.node.icon || getDefaultIcon(props.node)}
+            alt={props.node.type}
+        />
     );
 }

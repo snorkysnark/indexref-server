@@ -15,6 +15,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Node::Title).string())
                     .col(ColumnDef::new(Node::Subtype).string())
                     .col(ColumnDef::new(Node::Url).string())
+                    .col(ColumnDef::new(Node::Icon).string())
                     .col(ColumnDef::new(Node::Created).string())
                     .col(ColumnDef::new(Node::File).string())
                     .col(ColumnDef::new(Node::OriginalId).string())
@@ -61,6 +62,7 @@ enum Node {
     Title,
     Url,
     Created,
+    Icon,
     File,
     OriginalId,
     ParentId,
