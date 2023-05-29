@@ -8,6 +8,7 @@ use eyre::{eyre, ContextCompat};
 use fs_err as fs;
 use once_cell::sync::Lazy;
 use regex::Regex;
+use relative_path::RelativePath;
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use url::Url;
@@ -100,6 +101,37 @@ fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
     Ok(file_path)
 }
 
+fn remap_icon(icon: &str, relative_scrapbook_path: &RelativePath) -> Option<String> {
+    static SELECT_RESOURCE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^resource:\/\/scrapbook\/(.+)").unwrap());
+
+    if icon.starts_with("moz-icon://") {
+        // Ignore firefox-only icons
+        None
+    } else {
+        // Remap resource:// paths
+        match SELECT_RESOURCE.captures_iter(icon).next() {
+            Some(capture) => {
+                let icon_path_scrapbook = capture.get(1).unwrap().as_str();
+                let icon_path_root = relative_scrapbook_path
+                    .components()
+                    .map(|component| urlencoding::encode(component.as_str()).to_string())
+                    .chain(std::iter::once(icon_path_scrapbook.to_string()))
+                    .collect::<Vec<_>>()
+                    .join("/");
+
+                Some(format!(
+                    "/files/{container}/{path}",
+                    container = NodeType::Scrapbook.source_folder_type().unwrap().url_name(),
+                    path = icon_path_root
+                ))
+            }
+            // Will be cloned anyway, so no need to use Cow
+            None => Some(icon.to_owned()),
+        }
+    }
+}
+
 async fn insert_one(
     db: &DatabaseConnection,
     root_path: &Path,
@@ -149,11 +181,20 @@ async fn insert_one(
         }
     }
 
+    // TODO: don't redo this for every node!
+    let scrapbook_rel_path = scrapbook_path.to_relative_path(root_path)?;
+
+    let old_icon = none_if_empty(description.icon);
+    let remapped_icon = old_icon
+        .as_ref()
+        .and_then(|icon| remap_icon(icon, &scrapbook_rel_path));
+
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Scrapbook),
         subtype: Set(none_if_empty(description.r#type.clone())),
         title: Set(none_if_empty(description.title.clone())),
         url: Set(none_if_empty(description.source.clone())),
+        icon: Set(remapped_icon),
         file: Set(rel_path.map(Into::into)),
         created: Set(created),
         original_id: Set(none_if_empty(description.id.clone())),
@@ -170,7 +211,7 @@ async fn insert_one(
         title: Set(none_if_empty(description.title)),
         chars: Set(none_if_empty(description.chars)),
         comment: Set(none_if_empty(description.comment)),
-        icon: Set(none_if_empty(description.icon)),
+        icon: Set(old_icon),
         source: Set(none_if_empty(description.source)),
     }
     .insert(db)

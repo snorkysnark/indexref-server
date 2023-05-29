@@ -27,7 +27,7 @@ export default function NodeLabel(props: {
             onClick={[props.selectedId.set, props.node.id]}
             ref={setElement}
         >
-            <NodeIcon type={props.node.type} />
+            <NodeIcon node={props.node} />
             <span class="pl-2">{props.node.title}</span>
         </p>
     );
