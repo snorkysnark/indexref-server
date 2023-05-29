@@ -18,7 +18,7 @@ export default function NodeLabel(props: {
 
     return (
         <p
-            class="h-[1lh] select-none overflow-hidden whitespace-nowrap \
+            class="select-none overflow-x-hidden whitespace-nowrap \
             text-ellipsis cursor-pointer"
             classList={{
                 "bg-white hover:bg-blue-200": !selected(),
@@ -28,7 +28,7 @@ export default function NodeLabel(props: {
             ref={setElement}
         >
             <NodeIcon node={props.node} />
-            <span class="pl-2">{props.node.title}</span>
+            <span class="h-[1lh] pl-2">{props.node.title}</span>
         </p>
     );
 }
