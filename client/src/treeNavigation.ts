@@ -21,6 +21,17 @@ function nextNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
     return null;
 }
 
+// Find the bottommost child of this node (recursively)
+function recurseChildren(tree: NodeResourceReturn, current: NodeRel) {
+    while (current.children.length > 0) {
+        current = tree.nodeById.get(
+            current.children[current.children.length - 1]
+        );
+    }
+
+    return current;
+}
+
 function prevNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
     if (current.parent_id == null) return null;
 
@@ -30,13 +41,7 @@ function prevNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
     if (prevIndex >= 0) {
         let childAbove = tree.nodeById.get(parent.children[prevIndex]);
 
-        while (childAbove.children.length > 0) {
-            childAbove = tree.nodeById.get(
-                childAbove.children[childAbove.children.length - 1]
-            );
-        }
-
-        return childAbove.id;
+        return recurseChildren(tree, childAbove).id;
     } else {
         return parent.id;
     }
@@ -59,14 +64,30 @@ function selectRelative(
 
 export function selectNextNode(
     tree: NodeResourceReturn,
-    selectedId: GetSet<number>,
+    selectedId: GetSet<number>
 ) {
     selectRelative(tree, selectedId, nextNodeIdInTree);
 }
 
 export function selectPrevNode(
     tree: NodeResourceReturn,
-    selectedId: GetSet<number>,
+    selectedId: GetSet<number>
 ) {
     selectRelative(tree, selectedId, prevNodeIdInTree);
+}
+
+const ROOT_ID = 1;
+
+export function firstNodeId(tree: NodeResourceReturn) {
+    return tree.nodeById.get(ROOT_ID).children[0];
+}
+
+export function lastNodeId(tree: NodeResourceReturn) {
+    const root = tree.nodeById.get(ROOT_ID);
+    if (root.children.length === 0) return null;
+
+    return recurseChildren(
+        tree,
+        tree.nodeById.get(root.children[root.children.length - 1])
+    ).id;
 }
