@@ -2,22 +2,17 @@ import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { defineDataType, JsonViewer, stringType } from "@textea/json-viewer";
+import { arrayEq, isUrl } from "./utils";
 
 // Hack to use the JsonViewer react component in solid
 
 const linkType = defineDataType({
     ...stringType,
     is(value, path) {
-        if (typeof value === "string") {
-            return (
-                /^https?:\/\//.test(value) ||
-                (path.length === 2 &&
-                    path[0] === "node" &&
-                    path[1] === "file_proxy")
-            );
-        } else {
-            return false;
-        }
+        return (
+            typeof value === "string" &&
+            (isUrl(value) || arrayEq(path, ["node", "file_proxy"]))
+        );
     },
     Component: (props) => {
         const url = props.value.toString();

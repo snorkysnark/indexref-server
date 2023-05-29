@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use chrono::DateTime;
-use eyre::ContextCompat;
+use eyre::{bail, ContextCompat};
 use hyper::HeaderMap;
 use once_cell::sync::Lazy;
 use reqwest::Client;
@@ -105,11 +105,7 @@ pub async fn insert_from_source(
         }
 
         let title = extract_title(&item)?;
-        let item_type = item
-            .data
-            .get("itemType")
-            .and_then(|v| v.as_str())
-            .map(ToOwned::to_owned);
+        let item_type = item.data.get_ok("itemType")?.as_str_ok()?.to_owned();
 
         let date_modified = item
             .data
@@ -120,12 +116,25 @@ pub async fn insert_from_source(
             .map(|date| date.naive_utc());
         let parent_key = item.data.get("parentItem").map(string_value).transpose()?;
 
+        let zotero_select = if item_type == "annotation" {
+            match parent_key.as_ref() {
+                Some(parent_key) => format!(
+                    "zotero://open-pdf/library/items/{parent_key}?annotation={}",
+                    item.key
+                ),
+                None => bail!("annotation {} has not parent pdf", item.key),
+            }
+        } else {
+            format!("zotero://select/library/items/{}", item.key)
+        };
+
         let node_inserted = node::ActiveModel {
             r#type: Set(NodeType::Zotero),
-            subtype: Set(item_type),
+            subtype: Set(Some(item_type)),
             created: Set(date_modified),
             title: Set(title),
             original_id: Set(Some(item.key.clone())),
+            url: Set(Some(zotero_select)),
             ..Default::default()
         }
         .insert(db)
