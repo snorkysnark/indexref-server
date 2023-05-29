@@ -1,12 +1,28 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal, onCleanup, Show } from "solid-js";
 import NodeData from "./NodeData";
 import NodeTree from "./NodeTree";
 import { getSet } from "./signals/getset";
 import { createNodes } from "./signals/server";
+import { selectNextNode, selectPrevNode } from "./treeNavigation";
 
 export default function App() {
     const [nodes] = createNodes();
     const selectedId = getSet(createSignal<number>());
+
+    function onKeyDown(event: KeyboardEvent) {
+        switch (event.key) {
+            case "ArrowUp":
+                event.preventDefault();
+                selectPrevNode(nodes(), selectedId);
+                break;
+            case "ArrowDown":
+                event.preventDefault();
+                selectNextNode(nodes(), selectedId);
+                break;
+        }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", onKeyDown));
 
     return (
         <div class="flex h-screen">
