@@ -10,6 +10,8 @@ export default function App() {
     const selectedId = getSet(createSignal<number>());
 
     function onKeyDown(event: KeyboardEvent) {
+        if (!nodes()) return;
+
         switch (event.key) {
             case "ArrowUp":
                 event.preventDefault();
