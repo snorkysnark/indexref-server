@@ -1,5 +1,8 @@
+mod icon;
+
 use std::{
     collections::HashMap,
+    format,
     path::{Path, PathBuf},
 };
 
@@ -8,7 +11,7 @@ use eyre::{eyre, ContextCompat};
 use fs_err as fs;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use relative_path::RelativePath;
+use relative_path::RelativePathBuf;
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use url::Url;
@@ -101,45 +104,14 @@ fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
     Ok(file_path)
 }
 
-fn remap_icon(icon: &str, relative_scrapbook_path: &RelativePath) -> Option<String> {
-    static SELECT_RESOURCE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"^resource:\/\/scrapbook\/(.+)").unwrap());
-
-    if icon.starts_with("moz-icon://") {
-        // Ignore firefox-only icons
-        None
-    } else {
-        // Remap resource:// paths
-        match SELECT_RESOURCE.captures_iter(icon).next() {
-            Some(capture) => {
-                let icon_path_scrapbook = capture.get(1).unwrap().as_str();
-                let icon_path_root = relative_scrapbook_path
-                    .components()
-                    .map(|component| urlencoding::encode(component.as_str()).to_string())
-                    .chain(std::iter::once(icon_path_scrapbook.to_string()))
-                    .collect::<Vec<_>>()
-                    .join("/");
-
-                Some(format!(
-                    "/files/{container}/{path}",
-                    container = NodeType::Scrapbook.source_folder_type().unwrap().url_name(),
-                    path = icon_path_root
-                ))
-            }
-            // Will be cloned anyway, so no need to use Cow
-            None => Some(icon.to_owned()),
-        }
-    }
-}
-
 async fn insert_one(
     db: &DatabaseConnection,
-    root_path: &Path,
-    scrapbook_path: &Path,
+    location: &ScrapbookLocation<'_, '_>,
     description: RdfDescription,
 ) -> eyre::Result<(node::Model, scrapbook::Model)> {
     let index_html = {
-        let index_html = scrapbook_path
+        let index_html = location
+            .scrapbook_dir
             .join("data")
             .join(&description.id)
             .join("index.html");
@@ -171,7 +143,7 @@ async fn insert_one(
     };
 
     let rel_path = file_path
-        .map(|path| path.to_relative_path(root_path))
+        .map(|path| path.to_relative_path(location.root))
         .transpose()?;
 
     fn none_if_empty(string: String) -> Option<String> {
@@ -181,13 +153,10 @@ async fn insert_one(
         }
     }
 
-    // TODO: don't redo this for every node!
-    let scrapbook_rel_path = scrapbook_path.to_relative_path(root_path)?;
-
     let old_icon = none_if_empty(description.icon);
     let remapped_icon = old_icon
         .as_ref()
-        .and_then(|icon| remap_icon(icon, &scrapbook_rel_path));
+        .and_then(|icon| icon::remap_icon(icon, &location.scrapbook_dir_rel));
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Scrapbook),
@@ -220,6 +189,25 @@ async fn insert_one(
     Ok((inserted_node, inserted_data))
 }
 
+#[derive(Debug)]
+struct ScrapbookLocation<'a, 'b> {
+    pub root: &'a Path,
+    pub scrapbook_dir: &'b Path,
+    pub scrapbook_dir_rel: RelativePathBuf,
+}
+
+impl<'a, 'b> ScrapbookLocation<'a, 'b> {
+    fn new(root: &'a Path, scrapbook_dir: &'b Path) -> eyre::Result<Self> {
+        let scrapbook_dir_rel = scrapbook_dir.to_relative_path(root)?;
+
+        Ok(Self {
+            root,
+            scrapbook_dir,
+            scrapbook_dir_rel,
+        })
+    }
+}
+
 pub async fn insert_from_folder(
     db: &DatabaseConnection,
     root: &Path,
@@ -231,7 +219,7 @@ pub async fn insert_from_folder(
         .filter_map(|result| result.ok_log_errors())
         .filter(|e| matches!(e.file_name().to_str(), Some("scrapbook.rdf")))
     {
-        let scrapbook_path = entry.path().parent().unwrap();
+        let location = ScrapbookLocation::new(root, entry.path().parent().unwrap())?;
 
         let rdf: Rdf = yaserde::de::from_str(&fs::read_to_string(entry.path())?)
             .map_err(|err| eyre!("XML parse error: {err}"))?;
@@ -239,8 +227,7 @@ pub async fn insert_from_folder(
         let mut about_to_id: HashMap<String, i32> = HashMap::new();
 
         for description in rdf.descriptions {
-            let (inserted_node, node_data) =
-                insert_one(db, root, &scrapbook_path, description).await?;
+            let (inserted_node, node_data) = insert_one(db, &location, description).await?;
 
             if let Some(about) = node_data.about {
                 about_to_id.insert(about, inserted_node.id);
