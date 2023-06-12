@@ -17,7 +17,7 @@ hyper = "0.14.26"
 tower-http = { version = "0.4.0", features = ["cors"] }
 reqwest = { version = "0.11.18", default-features = false, features = ["json", "rustls-tls"] }
 
-sea-orm = { version = "0.11.3", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres"] }
+sea-orm = { version = "0.11.3", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres", "postgres-array"] }
 migration = { path = "migration" }
 
 chrono = { version = "0.4.24", features = ["serde"] }

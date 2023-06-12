@@ -17,7 +17,6 @@ mod scrapbook;
 mod serve_file;
 mod single_file_z;
 mod telegram;
-mod types;
 mod zotero;
 
 pub async fn get_nodes(
@@ -26,11 +25,11 @@ pub async fn get_nodes(
 ) -> eyre::Result<Vec<NodePresentationWithRelations>> {
     let select = Statement::from_string(
         sea_orm::DatabaseBackend::Sqlite,
-        "select node.*, group_concat(nc.id) as children
-            from node
-            left join node_closure as nc
-            on node.id = nc.root and nc.depth = 1
-            group by node.id;"
+        "select parent.*, array_remove(array_agg(child.id), null) as children
+            from node as parent
+            left join node as child
+            on child.parent_id = parent.id
+            group by parent.id;"
             .to_owned(),
     );
 
