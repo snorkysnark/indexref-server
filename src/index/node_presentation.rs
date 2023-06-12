@@ -10,8 +10,6 @@ use crate::{
     entity::{node, types::NodeType},
 };
 
-use super::types::StringVec;
-
 #[derive(Clone, Debug, Serialize)]
 pub struct NodePresentation {
     pub id: i32,
@@ -81,7 +79,7 @@ pub struct NodePresentationWithRelations {
 pub struct NodeWithChildren {
     #[serde(flatten)]
     node: node::Model,
-    children: StringVec<i32>,
+    children: Vec<i32>,
 }
 
 impl FromQueryResult for NodeWithChildren {
