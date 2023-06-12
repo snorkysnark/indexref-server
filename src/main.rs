@@ -83,12 +83,11 @@ async fn main() -> eyre::Result<()> {
                     .route("/", get_service(ServeFile::new("static/index.html")));
             }
 
-            axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
-                LOCALHOST,
-                std::env::var("PORT")?.parse()?,
-            )))
-            .serve(app.into_make_service())
-            .await?;
+            let socket_addr = SocketAddrV4::new(LOCALHOST, std::env::var("PORT")?.parse()?);
+            println!("Serving on http://{socket_addr}");
+            axum::Server::bind(&SocketAddr::V4(socket_addr))
+                .serve(app.into_make_service())
+                .await?;
         }
     }
 
