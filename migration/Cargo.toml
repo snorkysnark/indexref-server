@@ -13,4 +13,4 @@ async-std = { version = "1", features = ["attributes", "tokio1"] }
 
 [dependencies.sea-orm-migration]
 version = "0.11.0"
-features = ["sqlx-sqlite", "runtime-tokio-rustls"]
+features = ["runtime-tokio-rustls", "sqlx-postgres"]

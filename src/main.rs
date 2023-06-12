@@ -15,7 +15,7 @@ use config::{AppConfig, SourcesConfig};
 use paths::ProjectPaths;
 use sea_orm::{Database, DatabaseConnection};
 
-use migration::{ConnectionTrait, Migrator, MigratorTrait};
+use migration::{Migrator, MigratorTrait};
 use tower_http::cors::{self, CorsLayer};
 
 #[derive(Parser)]
@@ -43,15 +43,15 @@ pub struct AppState {
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     let cli = Cli::parse();
+    dotenvy::dotenv().ok();
 
     color_eyre::install()?;
     tracing_subscriber::fmt().init();
 
-    let paths = ProjectPaths::init("com", "snorkysnark", "Indexref-Server")?;
+    let paths = ProjectPaths::init("indexref-server")?;
     let config = AppConfig::load(paths.config_path())?;
 
-    libsqlite3_extensions::init();
-    let db = Database::connect(paths.db_connection_string()?).await?;
+    let db = Database::connect(std::env::var("DATABASE_URL")?).await?;
 
     match cli.command {
         Commands::Index => {
@@ -61,14 +61,6 @@ async fn main() -> eyre::Result<()> {
             Migrator::up(&db, None)
                 .await
                 .suggestion("Try rebuilding the index from scratch")?;
-
-            db.execute_unprepared(
-                r#"CREATE VIRTUAL TABLE IF NOT EXISTS node_closure USING transitive_closure (
-                tablename="node",
-                idcolumn="id",
-                parentcolumn="parent_id");"#,
-            )
-            .await?;
 
             #[allow(unused_mut)]
             let mut app = Router::new()
@@ -93,7 +85,7 @@ async fn main() -> eyre::Result<()> {
 
             axum::Server::bind(&SocketAddr::V4(SocketAddrV4::new(
                 LOCALHOST,
-                config.server.port(),
+                std::env::var("PORT")?.parse()?,
             )))
             .serve(app.into_make_service())
             .await?;

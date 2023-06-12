@@ -19,7 +19,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Telegram::ChatName).string())
                     .col(ColumnDef::new(Telegram::ChatType).string().not_null())
                     .col(ColumnDef::new(Telegram::ChatId).big_integer().not_null())
-                    .col(ColumnDef::new(Telegram::Message).string().not_null())
+                    .col(ColumnDef::new(Telegram::Message).json_binary().not_null())
                     .foreign_key(
                         sea_query::ForeignKey::create()
                             .from(Telegram::Table, Telegram::NodeId)

@@ -20,10 +20,14 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Zotero::LibraryType).string().not_null())
                     .col(ColumnDef::new(Zotero::LibraryId).integer().not_null())
                     .col(ColumnDef::new(Zotero::LibraryName).string().not_null())
-                    .col(ColumnDef::new(Zotero::LibraryLinks).string().not_null())
-                    .col(ColumnDef::new(Zotero::Links).string().not_null())
-                    .col(ColumnDef::new(Zotero::Meta).string().not_null())
-                    .col(ColumnDef::new(Zotero::Data).string().not_null())
+                    .col(
+                        ColumnDef::new(Zotero::LibraryLinks)
+                            .json_binary()
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(Zotero::Links).json_binary().not_null())
+                    .col(ColumnDef::new(Zotero::Meta).json_binary().not_null())
+                    .col(ColumnDef::new(Zotero::Data).json_binary().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .from(Zotero::Table, Zotero::NodeId)

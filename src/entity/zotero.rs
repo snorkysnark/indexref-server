@@ -3,7 +3,6 @@
 use sea_orm::entity::prelude::*;
 
 use serde::Serialize;
-use serde_json::Value as JsonValue;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize)]
 #[sea_orm(table_name = "zotero")]
@@ -14,10 +13,14 @@ pub struct Model {
     pub library_type: String,
     pub library_id: i32,
     pub library_name: String,
-    pub library_links: JsonValue,
-    pub links: JsonValue,
-    pub meta: JsonValue,
-    pub data: JsonValue,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub library_links: Json,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub links: Json,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub meta: Json,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub data: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
