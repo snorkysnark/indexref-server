@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = [".", "migration", "libsqlite3-extensions"]
+members = [".", "migration"]
 
 [dependencies]
 tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
@@ -15,16 +15,14 @@ tokio-util = { version = "0.7.8", features = ["io"] }
 axum = { version = "0.6.17", features = ["headers"] }
 hyper = "0.14.26"
 tower-http = { version = "0.4.0", features = ["cors"] }
-reqwest = { version = "0.11.18", default_features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.11.18", default-features = false, features = ["json", "rustls-tls"] }
 
-sea-orm = { version = "0.11.3", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls"] }
-libsqlite3-sys = { version = "0.24.2", features = ["bundled"] }
-libsqlite3-extensions = { path = "libsqlite3-extensions" }
+sea-orm = { version = "0.11.3", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres"] }
 migration = { path = "migration" }
 
 chrono = { version = "0.4.24", features = ["serde"] }
 
-directories-next = "2.0.0"
+dirs-next = "2.0.0"
 walkdir = "2.3.3"
 
 thiserror = "1.0.40"
@@ -46,6 +44,7 @@ yaserde_derive = "0.8.0"
 scraper = "0.16.0"
 
 clap = { version = "4.2.4", features = ["derive"] }
+dotenvy = "0.15.7"
 
 relative-path = { version = "1.8.0", features = ["serde"] }
 pathdiff = "0.2.1"

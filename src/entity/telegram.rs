@@ -12,7 +12,8 @@ pub struct Model {
     pub chat_name: Option<String>,
     pub chat_type: String,
     pub chat_id: i64,
-    pub message: serde_json::Value,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub message: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

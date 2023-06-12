@@ -10,13 +10,19 @@ impl MigrationTrait for Migration {
             .create_table(
                 sea_query::Table::create()
                     .table(Node::Table)
-                    .col(ColumnDef::new(Node::Id).integer().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(Node::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
                     .col(ColumnDef::new(Node::Type).string().not_null())
                     .col(ColumnDef::new(Node::Title).string())
                     .col(ColumnDef::new(Node::Subtype).string())
                     .col(ColumnDef::new(Node::Url).string())
                     .col(ColumnDef::new(Node::Icon).string())
-                    .col(ColumnDef::new(Node::Created).string())
+                    .col(ColumnDef::new(Node::Created).date_time())
                     .col(ColumnDef::new(Node::File).string())
                     .col(ColumnDef::new(Node::OriginalId).string())
                     .col(ColumnDef::new(Node::ParentId).integer().default(1))
