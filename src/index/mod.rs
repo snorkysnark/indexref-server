@@ -6,18 +6,18 @@ use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 
 use crate::{config::SourcesConfig, entity::node, AppState};
 
-pub use self::node_data::{get_node_full, get_node_full_handler};
+// pub use self::node_data::{get_node_full, get_node_full_handler};
 use self::node_presentation::{NodePresentationWithRelations, NodeWithChildren};
 pub use self::serve_file::*;
 
-mod node_data;
+// mod node_data;
 mod node_presentation;
 mod onetab;
-mod scrapbook;
+// mod scrapbook;
 mod serve_file;
 mod single_file_z;
 mod telegram;
-mod zotero;
+// mod zotero;
 
 pub async fn get_nodes(
     db: &DatabaseConnection,
@@ -66,17 +66,17 @@ pub async fn rebuild_index(
         inserted_nodes
             .append(&mut self::single_file_z::insert_from_folder(db, single_file_z).await?);
     }
-    if let Some(scrapbook) = sources.scrapbook() {
-        inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
-    }
+    // if let Some(scrapbook) = sources.scrapbook() {
+    //     inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
+    // }
     if let Some(onetab) = sources.onetab() {
         inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
     }
-    if let Some(zotero) = sources.zotero() {
-        for source in zotero {
-            inserted_nodes.append(&mut self::zotero::insert_from_source(db, source).await?);
-        }
-    }
+    // if let Some(zotero) = sources.zotero() {
+    //     for source in zotero {
+    //         inserted_nodes.append(&mut self::zotero::insert_from_source(db, source).await?);
+    //     }
+    // }
 
     Ok(inserted_nodes)
 }
