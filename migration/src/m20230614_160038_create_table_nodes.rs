@@ -23,8 +23,10 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Node::Url).string())
                     .col(ColumnDef::new(Node::Icon).string())
                     .col(ColumnDef::new(Node::Created).date_time())
+                    .col(ColumnDef::new(Node::Modified).date_time())
                     .col(ColumnDef::new(Node::File).string())
                     .col(ColumnDef::new(Node::OriginalId).string())
+                    .col(ColumnDef::new(Node::Data).json_binary())
                     .col(ColumnDef::new(Node::ParentId).integer().default(1))
                     .foreign_key(
                         ForeignKey::create()
@@ -41,7 +43,7 @@ impl MigrationTrait for Migration {
                 Query::insert()
                     .into_table(Node::Table)
                     .columns([Node::Type, Node::ParentId])
-                    .values_panic(["Root".into(), (None as Option<i32>).into()])
+                    .values_panic(["Root".into(), None::<i32>.into()])
                     .to_owned(),
             )
             .await?;
@@ -68,8 +70,10 @@ enum Node {
     Title,
     Url,
     Created,
+    Modified,
     Icon,
     File,
     OriginalId,
+    Data,
     ParentId,
 }

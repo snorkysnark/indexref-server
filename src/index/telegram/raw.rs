@@ -1,38 +1,11 @@
-use serde::{
-    de::{DeserializeOwned, Error as _},
-    Deserialize,
-};
-
-#[derive(Debug)]
-pub struct ParsedAndRaw<T> {
-    // The full json value (we don't know the exact structure of it)
-    pub raw: serde_json::Value,
-    // Relevant data
-    pub parsed: T,
-}
-
-impl<'de, T> Deserialize<'de> for ParsedAndRaw<T>
-where
-    T: DeserializeOwned,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let raw = serde_json::Value::deserialize(deserializer)?;
-
-        Ok(Self {
-            parsed: serde_json::from_value(raw.clone()).map_err(D::Error::custom)?,
-            raw,
-        })
-    }
-}
+use serde::{Deserialize, Serialize};
+use serde_json::{Map as JsonMap, Value as JsonValue};
 
 #[derive(Debug, Deserialize)]
 pub struct Chat {
     #[serde(flatten)]
     pub metadata: ChatMetadata,
-    pub messages: Vec<ParsedAndRaw<Message>>,
+    pub messages: Vec<Message>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -42,21 +15,36 @@ pub struct ChatMetadata {
     pub id: i64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
     pub id: i64,
     pub r#type: String,
     pub date: String,
-    pub date_unixtime: String,
+    pub edited: Option<String>,
+    pub text: JsonValue,
     pub text_entities: Vec<TextEntity>,
     pub photo: Option<String>,
     pub file: Option<String>,
+    #[serde(flatten)]
+    pub other: JsonMap<String, JsonValue>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TextEntity {
     pub r#type: String,
     pub text: String,
-    #[serde(default)]
     pub href: Option<String>,
+    #[serde(flatten)]
+    pub other: JsonMap<String, JsonValue>,
+}
+
+impl From<TextEntity> for crate::entity::types::TextEntity {
+    fn from(value: TextEntity) -> Self {
+        Self {
+            r#type: value.r#type,
+            text: value.text,
+            href: value.href,
+            other: value.other,
+        }
+    }
 }

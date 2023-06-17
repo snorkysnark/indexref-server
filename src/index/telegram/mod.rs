@@ -7,9 +7,12 @@ use relative_path::RelativePathBuf;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 
-use self::raw::{Chat, ChatMetadata, Message, ParsedAndRaw};
+use self::raw::{Chat, ChatMetadata, Message};
 use crate::{
-    entity::{node, telegram, types::NodeType},
+    entity::{
+        node,
+        types::{NodeData, NodeType, TelegramData},
+    },
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
 };
@@ -18,50 +21,48 @@ async fn insert_message(
     db: &DatabaseConnection,
     metadata: ChatMetadata,
     relative_path: RelativePathBuf,
-    message: ParsedAndRaw<Message>,
+    message: Message,
 ) -> eyre::Result<node::Model> {
-    let title = if message.parsed.text_entities.len() > 0 {
+    let title = if message.text_entities.len() > 0 {
         Some(
             message
-                .parsed
                 .text_entities
                 .iter()
                 .map(|entity| entity.text.as_str())
                 .collect(),
         )
     } else {
-        message.parsed.file.or(message.parsed.photo)
+        message.file.clone().or(message.photo.clone())
     };
 
-    let url = message.parsed.text_entities.iter().find_map(|block| {
+    let url = message.text_entities.iter().find_map(|block| {
         if block.r#type == "link" {
             Some(block.text.clone())
         } else {
             block.href.clone()
         }
     });
-    let created = NaiveDateTime::parse_from_str(&message.parsed.date, "%Y-%m-%dT%H:%M:%S")?;
-    let message_id = message.parsed.id.to_string();
+    let created = NaiveDateTime::parse_from_str(&message.date, "%Y-%m-%dT%H:%M:%S")?;
+    let message_id = message.id.to_string();
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Telegram),
-        subtype: Set(Some(message.parsed.r#type)),
+        subtype: Set(Some(message.r#type.clone())),
         title: Set(title),
         url: Set(url),
         created: Set(Some(created)),
         file: Set(Some(relative_path.into())),
         original_id: Set(Some(message_id)),
+        data: Set(Some(NodeData::Telegram(TelegramData {
+            chat_name: metadata.name,
+            chat_type: metadata.r#type,
+            chat_id: metadata.id,
+            text_entities: message.text_entities.into_iter().map(Into::into).collect(),
+            photo: message.photo,
+            file: message.file,
+            other: message.other,
+        }))),
         ..Default::default()
-    }
-    .insert(db)
-    .await?;
-
-    telegram::ActiveModel {
-        node_id: Set(inserted_node.id),
-        chat_name: Set(metadata.name),
-        chat_type: Set(metadata.r#type),
-        chat_id: Set(metadata.id),
-        message: Set(message.raw),
     }
     .insert(db)
     .await?;
@@ -85,7 +86,7 @@ pub async fn insert_from_folder(
         let chat: Chat = serde_json::from_str(&fs::read_to_string(entry.path())?)?;
         for message in chat.messages {
             // Service messaged don't seem to have any useful data
-            if message.parsed.r#type == "service" {
+            if message.r#type == "service" {
                 continue;
             }
 
