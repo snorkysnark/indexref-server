@@ -43,6 +43,13 @@ async fn insert_message(
         }
     });
     let created = NaiveDateTime::parse_from_str(&message.date, "%Y-%m-%dT%H:%M:%S")?;
+    let edited = message
+        .edited
+        .as_deref()
+        .map(|edited| NaiveDateTime::parse_from_str(edited, "%Y-%m-%dT%H:%M:%S"))
+        .transpose()?
+        .or(Some(created.clone()));
+
     let message_id = message.id.to_string();
 
     let inserted_node = node::ActiveModel {
@@ -51,6 +58,7 @@ async fn insert_message(
         title: Set(title),
         url: Set(url),
         created: Set(Some(created)),
+        modified: Set(edited),
         file: Set(Some(relative_path.into())),
         original_id: Set(Some(message_id)),
         data: Set(Some(NodeData::Telegram(TelegramData {
