@@ -23,14 +23,14 @@ async fn insert_message(
     relative_path: RelativePathBuf,
     message: Message,
 ) -> eyre::Result<node::Model> {
-    let title = if message.text_entities.len() > 0 {
-        Some(
-            message
-                .text_entities
-                .iter()
-                .map(|entity| entity.text.as_str())
-                .collect(),
-        )
+    let full_text: String = message
+        .text_entities
+        .iter()
+        .map(|entity| entity.text.as_str())
+        .collect();
+
+    let title = if full_text.len() > 0 {
+        Some(full_text.clone())
     } else {
         message.file.clone().or(message.photo.clone())
     };
@@ -54,7 +54,7 @@ async fn insert_message(
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Telegram),
-        subtype: Set(Some(message.r#type.clone())),
+        subtype: Set(Some(message.r#type)),
         title: Set(title),
         url: Set(url),
         created: Set(Some(created)),
@@ -65,6 +65,7 @@ async fn insert_message(
             chat_name: metadata.name,
             chat_type: metadata.r#type,
             chat_id: metadata.id,
+            full_text,
             text_entities: message.text_entities.into_iter().map(Into::into).collect(),
             photo: message.photo,
             file: message.file,
