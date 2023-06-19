@@ -13,6 +13,7 @@ pub struct TelegramData {
     pub chat_name: Option<String>,
     pub chat_type: String,
     pub chat_id: i64,
+    pub full_text: String,
     pub text_entities: Vec<TextEntity>,
     pub photo: Option<String>,
     pub file: Option<String>,
