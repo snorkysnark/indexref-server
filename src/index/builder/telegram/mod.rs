@@ -1,4 +1,7 @@
+mod export;
 mod raw;
+
+pub use export::*;
 
 use std::{fs, path::Path};
 
@@ -9,10 +12,7 @@ use walkdir::WalkDir;
 
 use self::raw::{Chat, ChatMetadata, Message};
 use crate::{
-    entity::{
-        node,
-        types::{NodeData, NodeType, TelegramData},
-    },
+    entity::{node, types::NodeType},
     ext::{PathExt, ResultExt},
     path_convert::ToRelativePath,
 };
@@ -61,16 +61,19 @@ async fn insert_message(
         modified: Set(edited),
         file: Set(Some(relative_path.into())),
         original_id: Set(Some(message_id)),
-        data: Set(Some(NodeData::Telegram(TelegramData {
-            chat_name: metadata.name,
-            chat_type: metadata.r#type,
-            chat_id: metadata.id,
-            full_text,
-            text_entities: message.text_entities.into_iter().map(Into::into).collect(),
-            photo: message.photo,
-            file: message.file,
-            other: message.other,
-        }))),
+        data: Set(Some(
+            TelegramData {
+                chat_name: metadata.name,
+                chat_type: metadata.r#type,
+                chat_id: metadata.id,
+                full_text,
+                text_entities: message.text_entities,
+                photo: message.photo,
+                file: message.file,
+                other: message.other,
+            }
+            .into(),
+        )),
         ..Default::default()
     }
     .insert(db)

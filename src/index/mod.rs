@@ -1,23 +1,19 @@
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, Json};
 use hyper::StatusCode;
-use migration::{Migrator, MigratorTrait};
 use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 
-use crate::{config::SourcesConfig, entity::node, AppState};
+use crate::{config::SourcesConfig, AppState};
 
 // pub use self::node_data::{get_node_full, get_node_full_handler};
+pub use self::builder::*;
 use self::node_presentation::{NodePresentationWithRelations, NodeWithChildren};
 pub use self::serve_file::*;
 
 // mod node_data;
+mod builder;
 mod node_presentation;
-mod onetab;
-mod scrapbook;
 mod serve_file;
-mod single_file_z;
-mod telegram;
-// mod zotero;
 
 pub async fn get_nodes(
     db: &DatabaseConnection,
@@ -48,35 +44,4 @@ pub async fn get_nodes_handler(state: State<AppState>) -> Response {
         Ok(value) => Json(value).into_response(),
         Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response(),
     }
-}
-
-pub async fn rebuild_index(
-    db: &DatabaseConnection,
-    sources: &SourcesConfig,
-) -> eyre::Result<Vec<node::Model>> {
-    // Clear existing index
-    Migrator::fresh(db).await?;
-
-    let mut inserted_nodes = vec![];
-
-    if let Some(telegram_chat) = sources.telegram_chat() {
-        inserted_nodes.append(&mut self::telegram::insert_from_folder(db, telegram_chat).await?);
-    }
-    if let Some(single_file_z) = sources.single_file_z() {
-        inserted_nodes
-            .append(&mut self::single_file_z::insert_from_folder(db, single_file_z).await?);
-    }
-    if let Some(scrapbook) = sources.scrapbook() {
-        inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
-    }
-    if let Some(onetab) = sources.onetab() {
-        inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
-    }
-    // if let Some(zotero) = sources.zotero() {
-    //     for source in zotero {
-    //         inserted_nodes.append(&mut self::zotero::insert_from_source(db, source).await?);
-    //     }
-    // }
-
-    Ok(inserted_nodes)
 }

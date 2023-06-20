@@ -29,22 +29,11 @@ pub struct Message {
     pub other: JsonMap<String, JsonValue>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TextEntity {
     pub r#type: String,
     pub text: String,
     pub href: Option<String>,
     #[serde(flatten)]
     pub other: JsonMap<String, JsonValue>,
-}
-
-impl From<TextEntity> for crate::entity::types::TextEntity {
-    fn from(value: TextEntity) -> Self {
-        Self {
-            r#type: value.r#type,
-            text: value.text,
-            href: value.href,
-            other: value.other,
-        }
-    }
 }
