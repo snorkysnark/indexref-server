@@ -1,4 +1,6 @@
+mod export;
 mod icon;
+mod raw;
 
 use std::{
     collections::HashMap,
@@ -16,86 +18,16 @@ use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use url::Url;
 use walkdir::WalkDir;
-use yaserde_derive::YaDeserialize;
 
 use crate::{
-    entity::{
-        self, node,
-        types::{NodeData, NodeType},
-    },
+    entity::{node, types::NodeType},
     ext::ResultExt,
     path_convert::ToRelativePath,
 };
 
-#[derive(Debug, YaDeserialize)]
-#[yaserde(
-    prefix = "RDF",
-    root = "RDF",
-    namespace = "RDF: http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    namespace = "NS1: http://amb.vis.ne.jp/mozilla/scrapbook-rdf#"
-)]
-struct Rdf {
-    #[yaserde(rename = "Description")]
-    descriptions: Vec<RdfDescription>,
-    #[yaserde(rename = "Seq")]
-    sequences: Vec<RdfSeq>,
-}
+use self::{export::RdfDescriptionNullable, raw::Rdf};
 
-#[derive(Debug, YaDeserialize)]
-struct RdfDescription {
-    #[yaserde(attribute, prefix = "RDF")]
-    about: String,
-    #[yaserde(attribute, prefix = "NS1")]
-    id: String,
-    #[yaserde(attribute, rename = "type", prefix = "NS1")]
-    r#type: String,
-    #[yaserde(attribute, prefix = "NS1")]
-    title: String,
-    #[yaserde(attribute, prefix = "NS1")]
-    chars: String,
-    #[yaserde(attribute, prefix = "NS1")]
-    comment: String,
-    #[yaserde(attribute, prefix = "NS1")]
-    icon: String,
-    #[yaserde(attribute, prefix = "NS1")]
-    source: String,
-}
-
-impl From<RdfDescription> for entity::types::ScrapbookData {
-    fn from(value: RdfDescription) -> Self {
-        fn none_if_empty(string: String) -> Option<String> {
-            match string.as_str() {
-                "" => None,
-                _ => Some(string),
-            }
-        }
-
-        Self {
-            about: value.about,
-            id: value.id,
-            r#type: none_if_empty(value.r#type),
-            title: none_if_empty(value.title),
-            chars: none_if_empty(value.chars),
-            comment: none_if_empty(value.comment),
-            icon: none_if_empty(value.icon),
-            source: none_if_empty(value.source),
-        }
-    }
-}
-
-#[derive(Debug, YaDeserialize)]
-struct RdfSeq {
-    #[yaserde(attribute, prefix = "RDF")]
-    about: String,
-    #[yaserde(rename = "li")]
-    items: Vec<RdfLi>,
-}
-
-#[derive(Debug, YaDeserialize)]
-struct RdfLi {
-    #[yaserde(attribute, prefix = "RDF")]
-    resource: String,
-}
+pub type ScrapbookData = RdfDescriptionNullable;
 
 fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
     static SELECT_META: Lazy<Selector> = Lazy::new(|| Selector::parse("meta[content]").unwrap());
@@ -132,7 +64,7 @@ fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
 async fn insert_one(
     db: &DatabaseConnection,
     location: &ScrapbookLocation<'_, '_>,
-    description: entity::types::ScrapbookData,
+    description: RdfDescriptionNullable,
 ) -> eyre::Result<node::Model> {
     let index_html = {
         let index_html = location
@@ -189,7 +121,7 @@ async fn insert_one(
         created: Set(created),
         modified: Set(modified),
         original_id: Set(Some(description.id.clone())),
-        data: Set(Some(NodeData::Scrapbook(description))),
+        data: Set(Some(description.into())),
         ..Default::default()
     }
     .insert(db)
