@@ -19,7 +19,10 @@ use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
 
 use crate::{
-    entity::{node, scrapbook, types::NodeType},
+    entity::{
+        self, node,
+        types::{NodeData, NodeType},
+    },
     ext::ResultExt,
     path_convert::ToRelativePath,
 };
@@ -56,6 +59,28 @@ struct RdfDescription {
     icon: String,
     #[yaserde(attribute, prefix = "NS1")]
     source: String,
+}
+
+impl From<RdfDescription> for entity::types::ScrapbookData {
+    fn from(value: RdfDescription) -> Self {
+        fn none_if_empty(string: String) -> Option<String> {
+            match string.as_str() {
+                "" => None,
+                _ => Some(string),
+            }
+        }
+
+        Self {
+            about: value.about,
+            id: value.id,
+            r#type: none_if_empty(value.r#type),
+            title: none_if_empty(value.title),
+            chars: none_if_empty(value.chars),
+            comment: none_if_empty(value.comment),
+            icon: none_if_empty(value.icon),
+            source: none_if_empty(value.source),
+        }
+    }
 }
 
 #[derive(Debug, YaDeserialize)]
@@ -107,8 +132,8 @@ fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
 async fn insert_one(
     db: &DatabaseConnection,
     location: &ScrapbookLocation<'_, '_>,
-    description: RdfDescription,
-) -> eyre::Result<(node::Model, scrapbook::Model)> {
+    description: entity::types::ScrapbookData,
+) -> eyre::Result<node::Model> {
     let index_html = {
         let index_html = location
             .scrapbook_dir
@@ -126,16 +151,19 @@ async fn insert_one(
     let metadata = index_html
         .as_ref()
         .and_then(|path| fs::metadata(&path).ok());
+    // Note that WinRAR doesn't save file creation time by default
     let created = metadata
-        // For some reason, meta.created() returns the time the file was appeared in THIS
-        // filesystem (and not where it originated)
-        // meta.modified() returns the correct date
+        .as_ref()
+        .and_then(|meta| meta.created().ok())
+        .map(|time| DateTime::<Local>::from(time).naive_local());
+    let modified = metadata
+        .as_ref()
         .and_then(|meta| meta.modified().ok())
         .map(|time| DateTime::<Local>::from(time).naive_local());
 
     // For file nodes, the actual file path is found in index.html's redirect
-    let file_path = match description.r#type.as_str() {
-        "file" => index_html
+    let file_path = match description.r#type.as_deref() {
+        Some("file") => index_html
             .as_ref()
             .map(|index_html| extract_redirect_path(index_html))
             .transpose()?,
@@ -146,47 +174,28 @@ async fn insert_one(
         .map(|path| path.to_relative_path(location.root))
         .transpose()?;
 
-    fn none_if_empty(string: String) -> Option<String> {
-        match string.as_str() {
-            "" => None,
-            _ => Some(string),
-        }
-    }
-
-    let old_icon = none_if_empty(description.icon);
-    let remapped_icon = old_icon
+    let remapped_icon = description
+        .icon
         .as_ref()
         .and_then(|icon| icon::remap_icon(icon, &location.scrapbook_dir_rel));
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Scrapbook),
-        subtype: Set(none_if_empty(description.r#type.clone())),
-        title: Set(none_if_empty(description.title.clone())),
-        url: Set(none_if_empty(description.source.clone())),
+        subtype: Set(description.r#type.clone()),
+        title: Set(description.title.clone()),
+        url: Set(description.source.clone()),
         icon: Set(remapped_icon),
         file: Set(rel_path.map(Into::into)),
         created: Set(created),
-        original_id: Set(none_if_empty(description.id.clone())),
+        modified: Set(modified),
+        original_id: Set(Some(description.id.clone())),
+        data: Set(Some(NodeData::Scrapbook(description))),
         ..Default::default()
     }
     .insert(db)
     .await?;
 
-    let inserted_data = scrapbook::ActiveModel {
-        node_id: Set(inserted_node.id),
-        about: Set(none_if_empty(description.about)),
-        old_id: Set(none_if_empty(description.id)),
-        r#type: Set(none_if_empty(description.r#type)),
-        title: Set(none_if_empty(description.title)),
-        chars: Set(none_if_empty(description.chars)),
-        comment: Set(none_if_empty(description.comment)),
-        icon: Set(old_icon),
-        source: Set(none_if_empty(description.source)),
-    }
-    .insert(db)
-    .await?;
-
-    Ok((inserted_node, inserted_data))
+    Ok(inserted_node)
 }
 
 #[derive(Debug)]
@@ -227,11 +236,10 @@ pub async fn insert_from_folder(
         let mut about_to_id: HashMap<String, i32> = HashMap::new();
 
         for description in rdf.descriptions {
-            let (inserted_node, node_data) = insert_one(db, &location, description).await?;
+            let about = description.about.clone();
+            let inserted_node = insert_one(db, &location, description.into()).await?;
 
-            if let Some(about) = node_data.about {
-                about_to_id.insert(about, inserted_node.id);
-            }
+            about_to_id.insert(about, inserted_node.id);
             inserted_nodes.push(inserted_node);
         }
 

@@ -13,7 +13,7 @@ pub use self::serve_file::*;
 // mod node_data;
 mod node_presentation;
 mod onetab;
-// mod scrapbook;
+mod scrapbook;
 mod serve_file;
 mod single_file_z;
 mod telegram;
@@ -66,9 +66,9 @@ pub async fn rebuild_index(
         inserted_nodes
             .append(&mut self::single_file_z::insert_from_folder(db, single_file_z).await?);
     }
-    // if let Some(scrapbook) = sources.scrapbook() {
-    //     inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
-    // }
+    if let Some(scrapbook) = sources.scrapbook() {
+        inserted_nodes.append(&mut self::scrapbook::insert_from_folder(db, scrapbook).await?);
+    }
     if let Some(onetab) = sources.onetab() {
         inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
     }
