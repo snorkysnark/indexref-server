@@ -21,24 +21,6 @@ pub enum NodeType {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum AttachedTableType {
-    Telegram,
-    Scrapbook,
-    Zotero,
-}
-
-impl NodeType {
-    pub fn attached_table_type(&self) -> Option<AttachedTableType> {
-        match self {
-            Self::Telegram => Some(AttachedTableType::Telegram),
-            Self::Scrapbook => Some(AttachedTableType::Scrapbook),
-            Self::Zotero => Some(AttachedTableType::Zotero),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
 pub enum SourceFolderType {
     Telegram,
     SingleFileZ,

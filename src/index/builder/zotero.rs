@@ -8,11 +8,11 @@ use reqwest::Client;
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use serde::Deserialize;
-use serde_json::Value as JsonValue;
+use serde_json::{Map as JsonMap, Value as JsonValue};
 
 use crate::{
     config::{ZoteroSource, ZoteroSourceType},
-    entity::{node, types::NodeType, zotero},
+    entity::{node, types::NodeType},
     ext::JsonValueExt,
 };
 
@@ -23,7 +23,13 @@ struct ZoteroItem {
     library: ZoteroLibrary,
     links: JsonValue,
     meta: JsonValue,
-    data: JsonValue,
+    data: ZoteroItemData,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ZoteroItemData {
+    item_type: String,
 }
 
 #[derive(Debug, Deserialize)]
