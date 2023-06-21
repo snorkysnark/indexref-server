@@ -20,6 +20,19 @@ pub enum NodeType {
     Zotero,
 }
 
+impl NodeType {
+    pub fn field_name(&self) -> &'static str {
+        match self {
+            NodeType::Root => "root",
+            NodeType::Telegram => "telegram",
+            NodeType::SingleFileZ => "single_file_z",
+            NodeType::Scrapbook => "scrapbook",
+            NodeType::OneTab => "onetab",
+            NodeType::Zotero => "zotero",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum SourceFolderType {
     Telegram,

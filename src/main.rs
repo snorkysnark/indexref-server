@@ -65,7 +65,7 @@ async fn main() -> eyre::Result<()> {
             #[allow(unused_mut)]
             let mut app = Router::new()
                 .route("/nodes", get(index::get_nodes_handler))
-                // .route("/node/:id", get(index::get_node_full_handler))
+                .route("/node/:id", get(index::get_node_full_handler))
                 .route("/files/:node_type/*path", get(index::serve_file_handler))
                 .with_state(AppState {
                     db,
