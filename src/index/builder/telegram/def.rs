@@ -8,7 +8,7 @@ pub struct Chat {
     pub messages: Vec<Message>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ChatMetadata {
     pub name: Option<String>,
     pub r#type: String,
@@ -29,11 +29,19 @@ pub struct Message {
     pub other: JsonMap<String, JsonValue>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TextEntity {
     pub r#type: String,
     pub text: String,
     pub href: Option<String>,
     #[serde(flatten)]
     pub other: JsonMap<String, JsonValue>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MessageExport {
+    pub chat: ChatMetadata,
+    pub full_text: String,
+    #[serde(flatten)]
+    pub message: Message,
 }
