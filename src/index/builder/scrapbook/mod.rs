@@ -1,10 +1,10 @@
-mod export;
 mod icon;
 mod raw;
 
 use std::{
     collections::HashMap,
     format,
+    ops::Deref,
     path::{Path, PathBuf},
 };
 
@@ -25,9 +25,7 @@ use crate::{
     path_convert::ToRelativePath,
 };
 
-use self::{export::RdfDescriptionNullable, raw::Rdf};
-
-pub type ScrapbookData = RdfDescriptionNullable;
+use self::raw::{Rdf, RdfDescription};
 
 fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
     static SELECT_META: Lazy<Selector> = Lazy::new(|| Selector::parse("meta[content]").unwrap());
@@ -64,7 +62,7 @@ fn extract_redirect_path(index_html_path: &Path) -> eyre::Result<PathBuf> {
 async fn insert_one(
     db: &DatabaseConnection,
     location: &ScrapbookLocation<'_, '_>,
-    description: RdfDescriptionNullable,
+    description: RdfDescription,
 ) -> eyre::Result<node::Model> {
     let index_html = {
         let index_html = location
@@ -94,8 +92,8 @@ async fn insert_one(
         .map(|time| DateTime::<Local>::from(time).naive_local());
 
     // For file nodes, the actual file path is found in index.html's redirect
-    let file_path = match description.r#type.as_deref() {
-        Some("file") => index_html
+    let file_path = match description.r#type.as_str() {
+        "file" => index_html
             .as_ref()
             .map(|index_html| extract_redirect_path(index_html))
             .transpose()?,
@@ -106,22 +104,27 @@ async fn insert_one(
         .map(|path| path.to_relative_path(location.root))
         .transpose()?;
 
-    let remapped_icon = description
-        .icon
-        .as_ref()
+    fn none_if_empty<T: Deref<Target = str>>(string: T) -> Option<T> {
+        match &*string {
+            "" => None,
+            _ => Some(string),
+        }
+    }
+
+    let remapped_icon = none_if_empty(description.icon.as_str())
         .and_then(|icon| icon::remap_icon(icon, &location.scrapbook_dir_rel));
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Scrapbook),
-        subtype: Set(description.r#type.clone()),
-        title: Set(description.title.clone()),
-        url: Set(description.source.clone()),
+        subtype: Set(none_if_empty(description.r#type.clone())),
+        title: Set(none_if_empty(description.title.clone())),
+        url: Set(none_if_empty(description.source.clone())),
         icon: Set(remapped_icon),
         file: Set(rel_path.map(Into::into)),
         created: Set(created),
         modified: Set(modified),
         original_id: Set(Some(description.id.clone())),
-        data: Set(Some(description.into())),
+        data: Set(Some(serde_json::to_value(description)?)),
         ..Default::default()
     }
     .insert(db)

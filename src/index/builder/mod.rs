@@ -1,6 +1,5 @@
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{DatabaseConnection, FromJsonQueryResult};
-use serde::{Deserialize, Serialize};
+use sea_orm::DatabaseConnection;
 
 use crate::{config::SourcesConfig, entity::node};
 
@@ -9,14 +8,6 @@ mod scrapbook;
 mod single_file_z;
 mod telegram;
 mod zotero;
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, FromJsonQueryResult)]
-#[serde(rename_all = "lowercase")]
-pub enum NodeData {
-    Telegram(telegram::TelegramData),
-    Scrapbook(scrapbook::ScrapbookData),
-    Zotero(zotero::ZoteroData),
-}
 
 pub async fn rebuild_index(
     db: &DatabaseConnection,

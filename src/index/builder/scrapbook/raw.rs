@@ -1,3 +1,4 @@
+use serde::Serialize;
 use yaserde_derive::YaDeserialize;
 
 #[derive(Debug, YaDeserialize)]
@@ -14,7 +15,7 @@ pub struct Rdf {
     pub sequences: Vec<RdfSeq>,
 }
 
-#[derive(Debug, YaDeserialize)]
+#[derive(Debug, YaDeserialize, Serialize)]
 pub struct RdfDescription {
     #[yaserde(attribute, prefix = "RDF")]
     pub about: String,
@@ -33,28 +34,6 @@ pub struct RdfDescription {
     #[yaserde(attribute, prefix = "NS1")]
     pub source: String,
 }
-//
-// impl From<RdfDescription> for entity::types::ScrapbookData {
-//     fn from(value: RdfDescription) -> Self {
-//         fn none_if_empty(string: String) -> Option<String> {
-//             match string.as_str() {
-//                 "" => None,
-//                 _ => Some(string),
-//             }
-//         }
-//
-//         Self {
-//             about: value.about,
-//             id: value.id,
-//             r#type: none_if_empty(value.r#type),
-//             title: none_if_empty(value.title),
-//             chars: none_if_empty(value.chars),
-//             comment: none_if_empty(value.comment),
-//             icon: none_if_empty(value.icon),
-//             source: none_if_empty(value.source),
-//         }
-//     }
-// }
 
 #[derive(Debug, YaDeserialize)]
 pub struct RdfSeq {

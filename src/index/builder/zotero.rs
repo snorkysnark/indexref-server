@@ -15,11 +15,7 @@ use crate::{
     entity::{node, types::NodeType},
 };
 
-use super::NodeData;
-
-pub type ZoteroData = ZoteroItem;
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ZoteroItem {
     key: String,
     version: i32,
@@ -29,13 +25,7 @@ pub struct ZoteroItem {
     data: ZoteroItemData,
 }
 
-impl From<ZoteroItem> for NodeData {
-    fn from(value: ZoteroItem) -> Self {
-        NodeData::Zotero(value)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ZoteroItemData {
     item_type: String,
@@ -50,7 +40,7 @@ struct ZoteroItemData {
     other: JsonMap<String, JsonValue>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct ZoteroLibrary {
     r#type: String,
     id: i32,
@@ -152,7 +142,7 @@ pub async fn insert_from_source(
             title: Set(title),
             original_id: Set(Some(item.key.clone())),
             url: Set(Some(zotero_select)),
-            data: Set(Some(item.into())),
+            data: Set(Some(serde_json::to_value(item)?)),
             ..Default::default()
         }
         .insert(db)

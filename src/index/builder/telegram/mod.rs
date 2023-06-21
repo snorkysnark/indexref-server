@@ -1,7 +1,4 @@
-mod export;
-mod raw;
-
-pub use export::*;
+mod def;
 
 use std::{fs, path::Path};
 
@@ -10,7 +7,7 @@ use relative_path::RelativePathBuf;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 use walkdir::WalkDir;
 
-use self::raw::{Chat, ChatMetadata, Message};
+use self::def::{Chat, ChatMetadata, Message, MessageExport};
 use crate::{
     entity::{node, types::NodeType},
     ext::{PathExt, ResultExt},
@@ -54,26 +51,18 @@ async fn insert_message(
 
     let inserted_node = node::ActiveModel {
         r#type: Set(NodeType::Telegram),
-        subtype: Set(Some(message.r#type)),
+        subtype: Set(Some(message.r#type.clone())),
         title: Set(title),
         url: Set(url),
         created: Set(Some(created)),
         modified: Set(edited),
         file: Set(Some(relative_path.into())),
         original_id: Set(Some(message_id)),
-        data: Set(Some(
-            TelegramData {
-                chat_name: metadata.name,
-                chat_type: metadata.r#type,
-                chat_id: metadata.id,
-                full_text,
-                text_entities: message.text_entities,
-                photo: message.photo,
-                file: message.file,
-                other: message.other,
-            }
-            .into(),
-        )),
+        data: Set(Some(serde_json::to_value(MessageExport {
+            chat: metadata,
+            full_text,
+            message,
+        })?)),
         ..Default::default()
     }
     .insert(db)
