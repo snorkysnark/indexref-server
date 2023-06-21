@@ -8,13 +8,14 @@ mod onetab;
 mod scrapbook;
 mod single_file_z;
 mod telegram;
-// mod zotero;
+mod zotero;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, FromJsonQueryResult)]
 #[serde(rename_all = "lowercase")]
 pub enum NodeData {
     Telegram(telegram::TelegramData),
     Scrapbook(scrapbook::ScrapbookData),
+    Zotero(zotero::ZoteroData),
 }
 
 pub async fn rebuild_index(
@@ -39,11 +40,11 @@ pub async fn rebuild_index(
     if let Some(onetab) = sources.onetab() {
         inserted_nodes.append(&mut self::onetab::insert_from_folder(db, onetab).await?);
     }
-    // if let Some(zotero) = sources.zotero() {
-    //     for source in zotero {
-    //         inserted_nodes.append(&mut self::zotero::insert_from_source(db, source).await?);
-    //     }
-    // }
+    if let Some(zotero) = sources.zotero() {
+        for source in zotero {
+            inserted_nodes.append(&mut self::zotero::insert_from_source(db, source).await?);
+        }
+    }
 
     Ok(inserted_nodes)
 }

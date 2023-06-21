@@ -7,17 +7,20 @@ use once_cell::sync::Lazy;
 use reqwest::Client;
 use scraper::{Html, Selector};
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map as JsonMap, Value as JsonValue};
 
 use crate::{
     config::{ZoteroSource, ZoteroSourceType},
     entity::{node, types::NodeType},
-    ext::JsonValueExt,
 };
 
-#[derive(Debug, Deserialize)]
-struct ZoteroItem {
+use super::NodeData;
+
+pub type ZoteroData = ZoteroItem;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ZoteroItem {
     key: String,
     version: i32,
     library: ZoteroLibrary,
@@ -26,13 +29,28 @@ struct ZoteroItem {
     data: ZoteroItemData,
 }
 
-#[derive(Debug, Deserialize)]
+impl From<ZoteroItem> for NodeData {
+    fn from(value: ZoteroItem) -> Self {
+        NodeData::Zotero(value)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ZoteroItemData {
     item_type: String,
+    date_added: String,
+    date_modified: String,
+    parent_item: Option<String>,
+    title: Option<String>,
+    note: Option<String>,
+    annotation_text: Option<String>,
+    annotation_comment: Option<String>,
+    #[serde(flatten)]
+    other: JsonMap<String, JsonValue>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct ZoteroLibrary {
     r#type: String,
     id: i32,
@@ -71,9 +89,9 @@ impl ZoteroSource {
 fn extract_title(item: &ZoteroItem) -> eyre::Result<Option<String>> {
     static SELECT_H1: Lazy<Selector> = Lazy::new(|| Selector::parse("h1").unwrap());
 
-    Ok(match item.data.get_ok("itemType")?.as_str_ok()? {
+    Ok(match item.data.item_type.as_str() {
         "note" => {
-            let html = item.data.get_ok("note")?.as_str_ok()?;
+            let html = item.data.note.as_ref().context("note field missing")?;
 
             Html::parse_fragment(html)
                 .select(&*SELECT_H1)
@@ -82,15 +100,10 @@ fn extract_title(item: &ZoteroItem) -> eyre::Result<Option<String>> {
         }
         "annotation" => item
             .data
-            .get("annotationText")
-            .or(item.data.get("annotationComment"))
-            .and_then(|v| v.as_str())
-            .map(ToOwned::to_owned),
-        _ => item
-            .data
-            .get("title")
-            .and_then(|v| v.as_str())
-            .map(ToOwned::to_owned),
+            .annotation_text
+            .clone()
+            .or(item.data.annotation_comment.clone()),
+        _ => item.data.title.clone(),
     })
 }
 
@@ -111,19 +124,16 @@ pub async fn insert_from_source(
         }
 
         let title = extract_title(&item)?;
-        let item_type = item.data.get_ok("itemType")?.as_str_ok()?.to_owned();
+        let item_type = item.data.item_type.to_owned();
 
-        let date_modified = item
-            .data
-            .get("dateModified")
-            .and_then(|v| v.as_str())
-            .map(|v| DateTime::parse_from_rfc3339(v))
-            .transpose()?
-            .map(|date| date.naive_utc());
-        let parent_key = item.data.get("parentItem").map(string_value).transpose()?;
+        let date_added = DateTime::parse_from_rfc3339(&item.data.date_added)?.naive_utc();
+        let date_modified = DateTime::parse_from_rfc3339(&item.data.date_modified)?.naive_utc();
+
+        let item_key = item.key.clone();
+        let parent_item = item.data.parent_item.clone();
 
         let zotero_select = if item_type == "annotation" {
-            match parent_key.as_ref() {
+            match parent_item.as_ref() {
                 Some(parent_key) => format!(
                     "zotero://open-pdf/library/items/{parent_key}?annotation={}",
                     item.key
@@ -137,33 +147,21 @@ pub async fn insert_from_source(
         let node_inserted = node::ActiveModel {
             r#type: Set(NodeType::Zotero),
             subtype: Set(Some(item_type)),
-            created: Set(date_modified),
+            created: Set(Some(date_added)),
+            modified: Set(Some(date_modified)),
             title: Set(title),
             original_id: Set(Some(item.key.clone())),
             url: Set(Some(zotero_select)),
+            data: Set(Some(item.into())),
             ..Default::default()
         }
         .insert(db)
         .await?;
 
-        zotero::ActiveModel {
-            node_id: Set(node_inserted.id),
-            version: Set(item.version),
-            library_type: Set(item.library.r#type),
-            library_id: Set(item.library.id),
-            library_name: Set(item.library.name),
-            library_links: Set(item.library.links),
-            links: Set(item.links),
-            meta: Set(item.meta),
-            data: Set(item.data),
+        if let Some(parent_key) = parent_item {
+            relations.push((parent_key, item_key.clone()));
         }
-        .insert(db)
-        .await?;
-
-        if let Some(parent_id) = parent_key {
-            relations.push((parent_id, item.key.clone()));
-        }
-        id_map.insert(item.key, node_inserted.id);
+        id_map.insert(item_key, node_inserted.id);
         inserted_nodes.push(node_inserted);
     }
 
