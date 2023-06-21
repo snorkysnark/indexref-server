@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{de::IgnoredAny, Deserialize, Serialize};
 use serde_json::{Map as JsonMap, Value as JsonValue};
 
 #[derive(Debug, Deserialize)]
@@ -21,10 +21,15 @@ pub struct Message {
     pub r#type: String,
     pub date: String,
     pub edited: Option<String>,
-    pub text: JsonValue,
     pub text_entities: Vec<TextEntity>,
     pub photo: Option<String>,
     pub file: Option<String>,
+
+    // Skip "text" field since it's an array of mixed types and will be rejected by Opensearch
+    // Moreover, the same information is avaliable in "text_entities"
+    #[serde(skip_serializing)]
+    pub text: IgnoredAny,
+
     #[serde(flatten)]
     pub other: JsonMap<String, JsonValue>,
 }
