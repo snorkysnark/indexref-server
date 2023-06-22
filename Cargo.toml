@@ -57,5 +57,7 @@ regex = "1.8.1"
 urlencoding = "2.1.2"
 url = "2.3.1"
 
+opensearch = { version = "2.1.0", default_features = false, features = ["rustls-tls"] }
+
 [features]
 static_server = ["tower-http/fs"]

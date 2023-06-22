@@ -1,7 +1,15 @@
 use migration::{Migrator, MigratorTrait};
+use opensearch::{
+    indices::{IndicesCreateParts, IndicesDeleteParts},
+    BulkOperation, BulkOperations, BulkParts, OpenSearch,
+};
 use sea_orm::DatabaseConnection;
+use serde_json::Value as Json;
 
-use crate::{config::SourcesConfig, entity::node};
+use crate::{
+    config::SourcesConfig,
+    entity::{node, types::NodeType},
+};
 
 mod onetab;
 mod scrapbook;
@@ -38,4 +46,50 @@ pub async fn rebuild_index(
     }
 
     Ok(inserted_nodes)
+}
+
+pub async fn upload_to_opensearch(client: OpenSearch, nodes: Vec<node::Model>) -> eyre::Result<()> {
+    println!(
+        "{}",
+        client
+            .indices()
+            .delete(IndicesDeleteParts::Index(&["nodes"]))
+            .send()
+            .await?
+            .json::<Json>()
+            .await?
+    );
+    println!(
+        "{}",
+        client
+            .indices()
+            .create(IndicesCreateParts::Index("nodes"))
+            .send()
+            .await?
+            .json::<Json>()
+            .await?
+    );
+
+    let mut ops = BulkOperations::new();
+    for node in nodes.into_iter() {
+        if node.r#type != NodeType::Root {
+            ops.push(
+                BulkOperation::create(node.id.to_string(), node.into_presentation()?)
+                    .index("nodes"),
+            )?;
+        }
+    }
+
+    println!(
+        "{}",
+        client
+            .bulk(BulkParts::None)
+            .body(vec![ops])
+            .send()
+            .await?
+            .json::<Json>()
+            .await?
+    );
+
+    Ok(())
 }
