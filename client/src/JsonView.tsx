@@ -11,7 +11,7 @@ const linkType = defineDataType({
     is(value, path) {
         return (
             typeof value === "string" &&
-            (isUrl(value) || arrayEq(path, ["node", "file_proxy"]))
+            (isUrl(value) || arrayEq(path, ["file"]))
         );
     },
     Component: (props) => {
