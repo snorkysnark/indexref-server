@@ -43,7 +43,8 @@ function prevNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
 
         return recurseChildren(tree, childAbove).id;
     } else {
-        return parent.id;
+        // Root node should never be selected
+        return parent.type !== "Root" ? parent.id : null;
     }
 }
 
