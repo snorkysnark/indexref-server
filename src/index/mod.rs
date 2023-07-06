@@ -2,7 +2,9 @@ use axum::response::{IntoResponse, Response};
 use axum::{extract::State, Json};
 use hyper::StatusCode;
 use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
+use serde::Serialize;
 
+use crate::entity::types::NodeType;
 use crate::AppState;
 
 pub use self::builder::*;
@@ -15,7 +17,13 @@ mod node_data;
 mod node_presentation;
 mod serve_file;
 
-pub async fn get_nodes(db: &DatabaseConnection) -> eyre::Result<Vec<NodePresentationWithChildren>> {
+#[derive(Debug, Serialize)]
+pub struct NodeTree {
+    root: Vec<i32>,
+    nodes: Vec<NodePresentationWithChildren>,
+}
+
+pub async fn get_nodes(db: &DatabaseConnection) -> eyre::Result<NodeTree> {
     let select = Statement::from_string(
         sea_orm::DatabaseBackend::Sqlite,
         "select parent.*, array_remove(array_agg(child.id), null) as children
@@ -26,14 +34,24 @@ pub async fn get_nodes(db: &DatabaseConnection) -> eyre::Result<Vec<NodePresenta
             .to_owned(),
     );
 
-    let nodes: eyre::Result<Vec<_>> = NodeWithChildren::find_by_statement(select)
+    let mut root: Option<Vec<i32>> = None;
+    let nodes: Vec<_> = NodeWithChildren::find_by_statement(select)
         .all(db)
         .await?
         .into_iter()
-        .map(|node| node.into_presentation())
-        .collect();
+        .filter_map(|row| match row.node.r#type {
+            NodeType::Root => {
+                root.replace(row.children);
+                None
+            }
+            _ => Some(row.into_presentation()),
+        })
+        .collect::<eyre::Result<_>>()?;
 
-    Ok(nodes?)
+    Ok(NodeTree {
+        root: root.unwrap_or_default(),
+        nodes,
+    })
 }
 
 pub async fn get_nodes_handler(state: State<AppState>) -> Response {

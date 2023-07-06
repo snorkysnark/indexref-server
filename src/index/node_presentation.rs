@@ -72,8 +72,8 @@ pub struct NodePresentationWithChildren {
 #[derive(Debug, Serialize)]
 pub struct NodeWithChildren {
     #[serde(flatten)]
-    node: node::Model,
-    children: Vec<i32>,
+    pub node: node::Model,
+    pub children: Vec<i32>,
 }
 
 impl FromQueryResult for NodeWithChildren {
