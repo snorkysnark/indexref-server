@@ -29,8 +29,6 @@ struct Cli {
 enum Commands {
     /// Rebuild the index
     Index,
-    /// Upload to opensearch
-    Opensearch,
     /// Run local server
     Serve,
 }
@@ -59,13 +57,6 @@ async fn main() -> eyre::Result<()> {
     match cli.command {
         Commands::Index => {
             index::rebuild_index(&db, &config.sources).await?;
-        }
-        Commands::Opensearch => {
-            index::upload_to_opensearch(
-                OpenSearch::default(),
-                entity::node::Entity::find().all(&db).await?,
-            )
-            .await?
         }
         Commands::Serve => {
             Migrator::up(&db, None)
