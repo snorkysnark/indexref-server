@@ -3,7 +3,6 @@ import { createResource } from "solid-js";
 const base: string = import.meta.env.VITE_SERVER || "";
 
 export type NodeType =
-    | "Root"
     | "Folder"
     | "Telegram"
     | "SingleFileZ"
@@ -19,58 +18,57 @@ interface _Node<DATE> {
     url: string;
     icon: string;
     created: DATE;
+    modified: DATE;
     file: string;
-    file_proxy: string;
     original_id: string;
+    parent_id: number;
 }
 
-interface _NodeRel<DATE> extends _Node<DATE> {
-    parent_id: number;
+interface _NodeWithChildren<DATE> extends _Node<DATE> {
     children: number[];
 }
 
-export type Node = _Node<Date>;
-export type NodeRel = _NodeRel<Date>;
-
-export interface NodeExpanded {
-    node: Node;
-    data: any;
+interface _NodeTree<DATE> {
+    root: number[];
+    nodes: _NodeWithChildren<DATE>[]
 }
 
+export type Node = _Node<Date>;
+export type NodeWithChildren = _NodeWithChildren<Date>;
+export type NodeTree = _NodeTree<Date>;
+
 export interface NodeResourceReturn {
-    nodes: NodeRel[];
-    nodeById: Map<number, NodeRel>;
+    root: number[];
+    nodes: NodeWithChildren[];
+    nodeById: Map<number, NodeWithChildren>;
 }
 
 export function createNodes() {
-    return createResource(async () => {
+    return createResource<NodeResourceReturn>(async () => {
         const response = await fetch(base + "/nodes");
 
-        const nodeList: _NodeRel<string>[] = await response.json();
-        const nodeListParsed = nodeList.map(
+        const nodeTree: _NodeTree<string> = await response.json();
+        const nodeListParsed = nodeTree.nodes.map(
             (node) =>
-                ({
-                    ...node,
-                    created: node.created ? Date.parse(node.created) : null,
-                    icon: node.icon?.startsWith("/")
-                        ? base + node.icon
-                        : node.icon,
-                } as unknown as NodeRel)
+            ({
+                ...node,
+                created: node.created ? Date.parse(node.created) : null,
+                modified: node.modified ? Date.parse(node.modified) : null,
+                icon: node.icon?.startsWith("/")
+                    ? base + node.icon
+                    : node.icon,
+            } as unknown as NodeWithChildren)
         );
 
-        const nodeById = new Map<number, NodeRel>();
+        const nodeById = new Map<number, NodeWithChildren>();
         for (const node of nodeListParsed) {
             nodeById.set(node.id, node);
         }
 
         return {
+            root: nodeTree.root,
             nodes: nodeListParsed,
             nodeById,
         };
     });
-}
-
-export async function getNodeData(nodeId: number): Promise<NodeExpanded> {
-    const response = await fetch(`${base}/node/${nodeId}`);
-    return await response.json();
 }

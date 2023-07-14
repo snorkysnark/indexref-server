@@ -1,7 +1,7 @@
 import { GetSet } from "./signals/getset";
-import { NodeRel, NodeResourceReturn } from "./signals/server";
+import { NodeWithChildren, NodeResourceReturn } from "./signals/server";
 
-function nextNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
+function nextNodeIdInTree(tree: NodeResourceReturn, current: NodeWithChildren) {
     if (current.children.length > 0) {
         return current.children[0];
     }
@@ -22,7 +22,7 @@ function nextNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
 }
 
 // Find the bottommost child of this node (recursively)
-function recurseChildren(tree: NodeResourceReturn, current: NodeRel) {
+function recurseChildren(tree: NodeResourceReturn, current: NodeWithChildren) {
     while (current.children.length > 0) {
         current = tree.nodeById.get(
             current.children[current.children.length - 1]
@@ -32,7 +32,7 @@ function recurseChildren(tree: NodeResourceReturn, current: NodeRel) {
     return current;
 }
 
-function prevNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
+function prevNodeIdInTree(tree: NodeResourceReturn, current: NodeWithChildren) {
     if (current.parent_id == null) return null;
 
     const parent = tree.nodeById.get(current.parent_id);
@@ -43,15 +43,14 @@ function prevNodeIdInTree(tree: NodeResourceReturn, current: NodeRel) {
 
         return recurseChildren(tree, childAbove).id;
     } else {
-        // Root node should never be selected
-        return parent.type !== "Root" ? parent.id : null;
+        return parent.id;
     }
 }
 
 function selectRelative(
     tree: NodeResourceReturn,
     selectedId: GetSet<number>,
-    algorithm: (tree: NodeResourceReturn, current: NodeRel) => number
+    algorithm: (tree: NodeResourceReturn, current: NodeWithChildren) => number
 ) {
     const selectedNode =
         selectedId.get() != null ? tree.nodeById.get(selectedId.get()) : null;

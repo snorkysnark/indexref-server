@@ -7,7 +7,6 @@ import classes from "./tree.module.css";
 export default function NodeTree(propsRaw: {
     nodes: NodeResourceReturn;
     selectedId: GetSet<number>;
-    rootId?: number;
 }) {
     const props = mergeProps({ rootId: 1 }, propsRaw);
     const nodeById = (id: number) => props.nodes.nodeById.get(id);
@@ -24,7 +23,6 @@ export default function NodeTree(propsRaw: {
                         <Show when={nodeById(childId).children.length > 0}>
                             <NodeTree
                                 nodes={props.nodes}
-                                rootId={childId}
                                 selectedId={props.selectedId}
                             />
                         </Show>

@@ -1,10 +1,10 @@
 import { createEffect, createSignal } from "solid-js";
 import NodeIcon from "./NodeIcon";
 import { GetSet } from "./signals/getset";
-import { NodeRel } from "./signals/server";
+import { NodeWithChildren } from "./signals/server";
 
 export default function NodeLabel(props: {
-    node: NodeRel;
+    node: NodeWithChildren;
     selectedId: GetSet<number>;
 }) {
     const selected = () => props.selectedId.get() === props.node.id;

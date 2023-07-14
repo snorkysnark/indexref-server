@@ -1,11 +1,11 @@
-import { NodeRel } from "./signals/server";
+import { NodeWithChildren } from "./signals/server";
 import scrapbookIcon from "./icons/scrapbookx_32.png";
 import telegramIcon from "./icons/t_logo_sprite.svg";
 import singleFileZIcon from "./icons/singlefilez_128.png";
 import onetabIcon from "./icons/onetab-icon128.png";
 import zoteroIcon from "./icons/Zotero.png";
 
-function getDefaultIcon(node: NodeRel) {
+function getDefaultIcon(node: NodeWithChildren) {
     switch (node.type) {
         case "Scrapbook":
             return scrapbookIcon;
@@ -20,7 +20,7 @@ function getDefaultIcon(node: NodeRel) {
     }
 }
 
-export default function NodeIcon(props: { node: NodeRel }) {
+export default function NodeIcon(props: { node: NodeWithChildren }) {
     return (
         <img
             class="h-[1lh] inline-block"
