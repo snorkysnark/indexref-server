@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "entities",
     "migration",
-    "indexref-serve",
+    "entity",
+    #"indexref-serve",
     "indexref-sync",
 ]
