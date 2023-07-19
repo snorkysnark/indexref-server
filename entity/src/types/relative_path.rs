@@ -8,7 +8,7 @@ use sea_orm::{
 use serde::Serialize;
 
 // SQL-compatible wrapper around RelativePathBuf
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Hash)]
 #[serde(transparent)]
 pub struct RelativePathSql(RelativePathBuf);
 
