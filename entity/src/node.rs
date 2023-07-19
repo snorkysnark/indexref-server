@@ -18,6 +18,7 @@ pub struct Model {
     pub modified: Option<DateTime>,
     pub file: Option<RelativePathSql>,
     pub original_id: Option<String>,
+    pub hash: Option<String>,
     pub parent_id: Option<i32>,
     #[sea_orm(column_type = "JsonBinary", nullable)]
     pub data: Option<Json>,
