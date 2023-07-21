@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod file;
 pub mod node;
 
 pub mod types;

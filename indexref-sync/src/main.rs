@@ -2,14 +2,14 @@ mod ext;
 
 use std::{
     collections::{HashMap, HashSet},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
-use entity::{node, types::RelativePathSql};
-use eyre::ContextCompat;
-use futures::{StreamExt, TryStreamExt};
+use entity::file;
+use futures::{future, TryStreamExt};
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{ColumnTrait, Database, EntityTrait, FromQueryResult, QueryFilter, QuerySelect};
+use relative_path::RelativePathBuf;
+use sea_orm::{Database, EntityTrait};
 use walkdir::WalkDir;
 
 use ext::{ResultExt, ToRelativePath};
@@ -20,9 +20,9 @@ use ext::{ResultExt, ToRelativePath};
 // onetab
 // zotero
 
-#[derive(Debug, Eq, PartialEq, Hash, FromQueryResult)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 struct FileSummary {
-    file: RelativePathSql,
+    path: RelativePathBuf,
     hash: String,
 }
 
@@ -36,18 +36,26 @@ async fn main() -> eyre::Result<()> {
     let db = Database::connect(&db_url).await?;
     Migrator::up(&db, None).await?;
 
-    let indexed_files: HashSet<FileSummary> = node::Entity::find()
-        .distinct()
-        .filter(
-            node::Column::File
-                .is_not_null()
-                .and(node::Column::Hash.is_not_null()),
-        )
-        .into_model::<FileSummary>()
-        .stream(&db)
-        .await?
-        .try_collect()
-        .await?;
+    let indexed_files = {
+        let mut indexed_files: HashMap<FileSummary, file::Model> = HashMap::new();
+
+        file::Entity::find()
+            .stream(&db)
+            .await?
+            .try_for_each(|file_entry| {
+                indexed_files.insert(
+                    FileSummary {
+                        path: file_entry.path.clone().into(),
+                        hash: file_entry.hash.clone(),
+                    },
+                    file_entry,
+                );
+                future::ready(Ok(()))
+            })
+            .await?;
+
+        indexed_files
+    };
 
     let actual_files: HashSet<FileSummary> = WalkDir::new(basepath.join("telegram"))
         .into_iter()
@@ -56,15 +64,24 @@ async fn main() -> eyre::Result<()> {
         .map(|entry| {
             (|| -> eyre::Result<_> {
                 Ok(FileSummary {
-                    file: entry.path().to_relative_path(&telegram_path)?.into(),
+                    path: entry.path().to_relative_path(&telegram_path)?,
                     hash: sha256::try_digest(entry.path())?,
                 })
             })()
         })
         .collect::<Result<_, _>>()?;
 
-    let to_delete = indexed_files.difference(&actual_files);
-    let to_add = actual_files.difference(&indexed_files);
+    for (indexed_summary, indexed_file) in indexed_files.iter() {
+        if !actual_files.contains(indexed_summary) {
+            println!("Delete {indexed_file:?}");
+        }
+    }
+
+    for actual_summary in actual_files.into_iter() {
+        if !indexed_files.contains_key(&actual_summary) {
+            println!("Add {actual_summary:?}");
+        }
+    }
 
     Ok(())
 }

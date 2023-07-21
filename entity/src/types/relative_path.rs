@@ -1,36 +1,13 @@
-use std::ops::Deref;
-
-use relative_path::RelativePathBuf;
+use ::relative_path::RelativePathBuf;
 use sea_orm::{
     sea_query::{ArrayType, Nullable, ValueType},
     ColumnType, TryGetable, Value,
 };
 use serde::Serialize;
 
-// SQL-compatible wrapper around RelativePathBuf
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(transparent)]
-pub struct RelativePathSql(RelativePathBuf);
-
-impl Deref for RelativePathSql {
-    type Target = RelativePathBuf;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl From<RelativePathBuf> for RelativePathSql {
-    fn from(value: RelativePathBuf) -> Self {
-        Self(value)
-    }
-}
-
-impl From<RelativePathSql> for RelativePathBuf {
-    fn from(value: RelativePathSql) -> Self {
-        value.0
-    }
-}
+pub struct RelativePathSql(pub RelativePathBuf);
 
 impl From<RelativePathSql> for Value {
     fn from(value: RelativePathSql) -> Self {
@@ -68,5 +45,17 @@ impl ValueType for RelativePathSql {
 impl Nullable for RelativePathSql {
     fn null() -> Value {
         Value::String(None)
+    }
+}
+
+impl From<RelativePathBuf> for RelativePathSql {
+    fn from(value: RelativePathBuf) -> Self {
+        Self(value)
+    }
+}
+
+impl From<RelativePathSql> for RelativePathBuf {
+    fn from(value: RelativePathSql) -> Self {
+        value.0
     }
 }
