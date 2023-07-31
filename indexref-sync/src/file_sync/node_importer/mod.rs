@@ -1,4 +1,5 @@
-mod telegram_importer;
+mod single_file_z;
+mod telegram;
 
 use std::path::Path;
 
@@ -13,8 +14,8 @@ pub async fn import_from_file(
     id: i32,
 ) -> Result<Vec<node::Model>> {
     match file_type {
-        FileType::Telegram => telegram_importer::import_from_file(db, file_path, id).await,
-        FileType::SingleFileZ => todo!(),
+        FileType::Telegram => telegram::import_from_file(db, file_path, id).await,
+        FileType::SingleFileZ => single_file_z::import_from_file(db, file_path, id).await,
         FileType::Scrapbook => todo!(),
         FileType::OneTab => todo!(),
     }
