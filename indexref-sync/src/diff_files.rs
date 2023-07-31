@@ -31,7 +31,7 @@ async fn get_indexed_files(db: &DatabaseConnection) -> Result<HashMap<FileSummar
             indexed_files.insert(
                 FileSummary {
                     file_type: file_entry.source_type,
-                    path: file_entry.path.into(),
+                    path: file_entry.path.0.into_std_path_buf(),
                     hash: file_entry.hash,
                 },
                 file_entry.id,
