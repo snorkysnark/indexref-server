@@ -4,11 +4,29 @@ use std::path::PathBuf;
 #[derive(Debug, Deserialize)]
 pub struct SourcesConfig {
     #[serde(default)]
-    pub telegram: Vec<PathBuf>,
+    telegram: Vec<PathBuf>,
     #[serde(default)]
-    pub single_file_z: Vec<PathBuf>,
+    single_file_z: Vec<PathBuf>,
     #[serde(default)]
-    pub scrapbook: Vec<PathBuf>,
+    scrapbook: Vec<PathBuf>,
     #[serde(default)]
-    pub onetab: Vec<PathBuf>,
+    onetab: Vec<PathBuf>,
+}
+
+impl SourcesConfig {
+    pub fn telegram(&self) -> &[PathBuf] {
+        self.telegram.as_ref()
+    }
+
+    pub fn single_file_z(&self) -> &[PathBuf] {
+        self.single_file_z.as_ref()
+    }
+
+    pub fn scrapbook(&self) -> &[PathBuf] {
+        self.scrapbook.as_ref()
+    }
+
+    pub fn onetab(&self) -> &[PathBuf] {
+        self.onetab.as_ref()
+    }
 }

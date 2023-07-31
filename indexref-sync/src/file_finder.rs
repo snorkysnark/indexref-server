@@ -15,10 +15,16 @@ pub struct FoundFile {
 }
 
 pub fn find_all<'a>(config: &'a SourcesConfig) -> impl Iterator<Item = FoundFile> + 'a {
-    (config.telegram.iter().map(find_telegram).flatten())
-        .chain(config.single_file_z.iter().map(find_singlefile_z).flatten())
-        .chain(config.scrapbook.iter().map(find_scrapbooks).flatten())
-        .chain(config.onetab.iter().map(find_onetab).flatten())
+    (config.telegram().iter().map(find_telegram).flatten())
+        .chain(
+            config
+                .single_file_z()
+                .iter()
+                .map(find_singlefile_z)
+                .flatten(),
+        )
+        .chain(config.scrapbook().iter().map(find_scrapbooks).flatten())
+        .chain(config.onetab().iter().map(find_onetab).flatten())
 }
 
 fn find_telegram(source_dir: impl AsRef<Path>) -> impl Iterator<Item = FoundFile> {
