@@ -9,6 +9,7 @@ use std::{
 use entity::{file, types::FileType};
 use eyre::Result;
 use futures::{future, TryStreamExt};
+use log::info;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait};
 use tryvial::try_block;
 
@@ -79,6 +80,7 @@ pub async fn sync_db_with_sources(db: &DatabaseConnection, sources: &SourcesConf
         }
     }
 
+    info!("Files to delete: {to_delete:?}");
     // Remove deleted files from database
     transaction!(db => {
         for id in to_delete {
@@ -86,6 +88,7 @@ pub async fn sync_db_with_sources(db: &DatabaseConnection, sources: &SourcesConf
         }
     });
 
+    info!("Files to add: {to_add:#?}");
     // TODO: make this concurrent with tokio::spawn
     for summary in to_add.into_iter() {
         transaction!(db => {
