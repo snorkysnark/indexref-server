@@ -1,10 +1,11 @@
+mod scrapbook;
 mod single_file_z;
 mod telegram;
 
 use std::path::Path;
 
 use entity::{node, types::FileType};
-use eyre::Result;
+use eyre::{Context, Result};
 use sea_orm::DatabaseConnection;
 
 pub async fn import_from_file(
@@ -16,7 +17,8 @@ pub async fn import_from_file(
     match file_type {
         FileType::Telegram => telegram::import_from_file(db, file_path, id).await,
         FileType::SingleFileZ => single_file_z::import_from_file(db, file_path, id).await,
-        FileType::Scrapbook => todo!(),
+        FileType::Scrapbook => scrapbook::import_from_file(db, file_path, id).await,
         FileType::OneTab => todo!(),
     }
+    .with_context(|| format!("Error importing file {}", file_path.display()))
 }
