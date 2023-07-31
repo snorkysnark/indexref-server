@@ -3,3 +3,4 @@
 /migration/target
 
 index.db
+config.json
