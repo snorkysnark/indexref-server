@@ -53,11 +53,7 @@ async fn apply_diff(db: &DatabaseConnection, diff: FileDiff) -> Result<()> {
 
             let insered_file = file::ActiveModel {
                 source_type: Set(summary.file_type),
-                path: Set(summary
-                    .path
-                    .to_str()
-                    .expect("TODO: use utf8-only paths")
-                    .to_owned()),
+                path: Set(summary.path.try_into()?),
                 hash: Set(summary.hash),
                 ..Default::default()
             }
