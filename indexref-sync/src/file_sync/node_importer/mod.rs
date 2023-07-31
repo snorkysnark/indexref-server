@@ -1,3 +1,4 @@
+mod onetab;
 mod scrapbook;
 mod single_file_z;
 mod telegram;
@@ -18,7 +19,7 @@ pub async fn import_from_file(
         FileType::Telegram => telegram::import_from_file(db, file_path, id).await,
         FileType::SingleFileZ => single_file_z::import_from_file(db, file_path, id).await,
         FileType::Scrapbook => scrapbook::import_from_file(db, file_path, id).await,
-        FileType::OneTab => todo!(),
+        FileType::OneTab => onetab::import_from_file(db, file_path, id).await,
     }
     .with_context(|| format!("Error importing file {}", file_path.display()))
 }
