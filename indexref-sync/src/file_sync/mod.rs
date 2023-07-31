@@ -1,24 +1,26 @@
+mod file_finder;
+mod node_importer;
+
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
 };
 
+use entity::{file, types::FileType};
 use eyre::Result;
 use futures::{future, TryStreamExt};
-use sea_orm::{DatabaseConnection, EntityTrait};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait};
 use tryvial::try_block;
 
-use crate::{
-    config::SourcesConfig,
-    file_finder::{self, FoundFile},
-};
-use entity::{file, types::FileType};
+use crate::{config::SourcesConfig, macros::transaction};
+
+use self::file_finder::FoundFile;
 
 #[derive(Debug, Eq, PartialEq, Hash)]
-pub struct FileSummary {
-    pub file_type: FileType,
-    pub path: PathBuf,
-    pub hash: String,
+struct FileSummary {
+    file_type: FileType,
+    path: PathBuf,
+    hash: String,
 }
 
 async fn get_indexed_files(db: &DatabaseConnection) -> Result<HashMap<FileSummary, i32>> {
@@ -59,16 +61,7 @@ fn find_actual_files(sources: &SourcesConfig) -> Result<HashSet<FileSummary>> {
     Ok(result?)
 }
 
-#[derive(Debug)]
-pub struct FileDiff {
-    pub to_delete: Vec<i32>,
-    pub to_add: Vec<FileSummary>,
-}
-
-pub async fn diff_files_with_db(
-    db: &DatabaseConnection,
-    sources: &SourcesConfig,
-) -> Result<FileDiff> {
+pub async fn sync_db_with_sources(db: &DatabaseConnection, sources: &SourcesConfig) -> Result<()> {
     let indexed_files = get_indexed_files(db).await?;
     let actual_files = find_actual_files(sources)?;
 
@@ -86,5 +79,28 @@ pub async fn diff_files_with_db(
         }
     }
 
-    Ok(FileDiff { to_delete, to_add })
+    // Remove deleted files from database
+    transaction!(db => {
+        for id in to_delete {
+            file::Entity::delete_by_id(id).exec(db).await?;
+        }
+    });
+
+    // TODO: make this concurrent with tokio::spawn
+    for summary in to_add.into_iter() {
+        transaction!(db => {
+            let insered_file = file::ActiveModel {
+                source_type: Set(summary.file_type),
+                path: Set(summary.path.clone().try_into()?),
+                hash: Set(summary.hash),
+                ..Default::default()
+            }
+            .insert(db)
+            .await?;
+
+            node_importer::import_from_file(db, summary.file_type, &summary.path, insered_file.id).await?;
+        });
+    }
+
+    Ok(())
 }
