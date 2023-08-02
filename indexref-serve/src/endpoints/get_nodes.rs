@@ -1,18 +1,13 @@
 use std::collections::HashMap;
 
-use axum::{
-    extract::State,
-    response::{IntoResponse, Response},
-    Json,
-};
+use axum::{extract::State, response::Response};
 use chrono::NaiveDateTime;
 use eyre::Result;
 use futures::{future, TryStreamExt};
-use hyper::StatusCode;
 use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 use serde::Serialize;
 
-use crate::AppState;
+use crate::{err::ToJsonResultResponse, AppState};
 use entity::types::{NodeType, PathBufSql};
 
 #[derive(Debug, FromQueryResult)]
@@ -108,8 +103,5 @@ async fn get_node_tree(db: &DatabaseConnection) -> Result<Vec<NodeTree>> {
 }
 
 pub async fn get_node_tree_handler(state: State<AppState>) -> Response {
-    match get_node_tree(&state.db).await {
-        Ok(value) => Json(value).into_response(),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response(),
-    }
+    get_node_tree(&state.db).await.to_json_result_response()
 }
