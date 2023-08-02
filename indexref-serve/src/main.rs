@@ -1,5 +1,5 @@
+mod endpoints;
 mod ext;
-mod index;
 
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
@@ -30,7 +30,7 @@ async fn main() -> eyre::Result<()> {
 
     #[allow(unused_mut)]
     let mut app = Router::new()
-        .route("/nodes", get(index::get_node_tree_handler))
+        .route("/nodes", get(endpoints::get_node_tree_handler))
         // .route("/node/:id", get(index::get_node_full_handler))
         .with_state(AppState { db })
         .layer(CorsLayer::new().allow_origin(cors::Any));
