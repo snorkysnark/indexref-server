@@ -17,3 +17,16 @@ pub enum NodeType {
     #[sea_orm(string_value = "Zotero")]
     Zotero,
 }
+
+impl NodeType {
+    pub fn field_name(&self) -> &'static str {
+        match self {
+            NodeType::Root => "root",
+            NodeType::Telegram => "telegram",
+            NodeType::SingleFileZ => "single_file_z",
+            NodeType::Scrapbook => "scrapbook",
+            NodeType::OneTab => "one_tab",
+            NodeType::Zotero => "zotero",
+        }
+    }
+}
