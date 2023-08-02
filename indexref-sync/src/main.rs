@@ -12,6 +12,7 @@ use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     tracing_subscriber::fmt()
         // Filter what crates emit logs
         .with_env_filter(EnvFilter::try_new("indexref_sync,sea_orm")?)
