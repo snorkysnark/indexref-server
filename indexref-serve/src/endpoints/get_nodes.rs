@@ -6,6 +6,8 @@ use axum::{
     Json,
 };
 use chrono::NaiveDateTime;
+use eyre::Result;
+use futures::{future, TryStreamExt};
 use hyper::StatusCode;
 use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 use serde::Serialize;
@@ -68,7 +70,7 @@ impl NodeFlat {
     }
 }
 
-async fn get_node_tree(db: &DatabaseConnection) -> eyre::Result<Vec<NodeTree>> {
+async fn get_node_tree(db: &DatabaseConnection) -> Result<Vec<NodeTree>> {
     let select = Statement::from_string(
         sea_orm::DatabaseBackend::Postgres,
         include_str!("./node_tree.sql").to_owned(),
@@ -77,16 +79,18 @@ async fn get_node_tree(db: &DatabaseConnection) -> eyre::Result<Vec<NodeTree>> {
     let mut root_node: Option<NodeFlat> = None;
     let mut nodes_by_id: HashMap<i32, NodeFlat> = HashMap::new();
 
-    for node in NodeFlat::find_by_statement(select).all(db).await? {
-        match node.node_type {
-            NodeType::Root => {
+    NodeFlat::find_by_statement(select)
+        .stream(db)
+        .await?
+        .try_for_each(|node| {
+            if node.node_type == NodeType::Root {
                 root_node = Some(node);
-            }
-            _ => {
+            } else {
                 nodes_by_id.insert(node.id, node);
             }
-        };
-    }
+            future::ready(Ok(()))
+        })
+        .await?;
 
     let tree = root_node
         .expect("Root node should always exist")

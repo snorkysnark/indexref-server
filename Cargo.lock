@@ -1303,6 +1303,7 @@ dependencies = [
  "entity",
  "eyre",
  "fs-err",
+ "futures",
  "hyper",
  "migration",
  "mime_guess",
