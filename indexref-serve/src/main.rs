@@ -1,5 +1,4 @@
 mod endpoints;
-mod ext;
 
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
