@@ -8,6 +8,8 @@ use sea_orm::{Database, DatabaseConnection};
 
 use migration::{Migrator, MigratorTrait};
 use tower_http::cors::{self, CorsLayer};
+use tracing::info;
+use tracing_subscriber::EnvFilter;
 
 const LOCALHOST: Ipv4Addr = Ipv4Addr::new(127, 0, 0, 1);
 
@@ -21,7 +23,10 @@ async fn main() -> eyre::Result<()> {
     dotenvy::dotenv().ok();
 
     color_eyre::install()?;
-    tracing_subscriber::fmt().init();
+    tracing_subscriber::fmt()
+        // Filter what crates emit logs
+        .with_env_filter(EnvFilter::try_new("indexref_serve,sea_orm")?)
+        .init();
 
     let db = Database::connect(std::env::var("DATABASE_URL")?).await?;
     let port: u16 = std::env::var("INDEXREF_PORT")?.parse()?;
@@ -46,7 +51,7 @@ async fn main() -> eyre::Result<()> {
     }
 
     let socket_addr = SocketAddrV4::new(LOCALHOST, port);
-    println!("Serving on http://{socket_addr}");
+    info!("Serving on http://{socket_addr}");
     axum::Server::bind(&SocketAddr::V4(socket_addr))
         .serve(app.into_make_service())
         .await?;
