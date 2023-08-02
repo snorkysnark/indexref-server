@@ -88,8 +88,8 @@ async fn get_node_tree(db: &DatabaseConnection) -> eyre::Result<Vec<NodeTree>> {
         };
     }
 
-    let tree_roots = root_node
-        .unwrap()
+    let tree = root_node
+        .expect("Root node should always exist")
         .children
         .iter()
         .map(|child_id| {
@@ -100,7 +100,7 @@ async fn get_node_tree(db: &DatabaseConnection) -> eyre::Result<Vec<NodeTree>> {
         })
         .collect();
 
-    Ok(tree_roots)
+    Ok(tree)
 }
 
 pub async fn get_node_tree_handler(state: State<AppState>) -> Response {
