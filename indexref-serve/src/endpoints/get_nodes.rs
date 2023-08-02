@@ -23,6 +23,7 @@ struct NodeFlat {
     created: Option<NaiveDateTime>,
     modified: Option<NaiveDateTime>,
     original_id: Option<String>,
+    parent_id: Option<i32>,
     children: Vec<i32>,
 }
 
@@ -39,6 +40,7 @@ struct NodeTree {
     created: Option<NaiveDateTime>,
     modified: Option<NaiveDateTime>,
     original_id: Option<String>,
+    parent_id: Option<i32>,
     children: Vec<NodeTree>,
 }
 
@@ -56,6 +58,7 @@ impl NodeFlat {
             created: self.created,
             modified: self.modified,
             original_id: self.original_id,
+            parent_id: self.parent_id,
             children: self
                 .children
                 .iter()

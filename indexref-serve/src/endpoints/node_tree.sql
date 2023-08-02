@@ -10,6 +10,7 @@ WITH node_agg AS (
         parent.created,
         parent.modified,
         parent.original_id,
+        parent.parent_id,
         array_remove(array_agg(child.id), NULL) AS children
     FROM
         node AS parent
