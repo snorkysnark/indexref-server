@@ -10,22 +10,21 @@ use hyper::StatusCode;
 use sea_orm::{DatabaseConnection, FromQueryResult, Statement};
 use serde::Serialize;
 
-use crate::{
-    entity::types::{NodeType, RelativePathSql},
-    AppState,
-};
+use crate::AppState;
+use entity::types::{NodeType, PathBufSql};
 
 #[derive(Debug, FromQueryResult)]
 struct NodeFlat {
     id: i32,
-    r#type: NodeType,
-    subtype: Option<String>,
+    file_id: Option<i32>,
+    file_path: Option<PathBufSql>,
+    node_type: NodeType,
     title: Option<String>,
+    subtype: Option<String>,
     url: Option<String>,
     icon: Option<String>,
     created: Option<NaiveDateTime>,
     modified: Option<NaiveDateTime>,
-    file: Option<RelativePathSql>,
     original_id: Option<String>,
     children: Vec<i32>,
 }
@@ -33,14 +32,15 @@ struct NodeFlat {
 #[derive(Debug, Serialize)]
 struct NodeTree {
     id: i32,
-    r#type: NodeType,
-    subtype: Option<String>,
+    file_id: Option<i32>,
+    file_path: Option<PathBufSql>,
+    node_type: NodeType,
     title: Option<String>,
+    subtype: Option<String>,
     url: Option<String>,
     icon: Option<String>,
     created: Option<NaiveDateTime>,
     modified: Option<NaiveDateTime>,
-    file: Option<RelativePathSql>,
     original_id: Option<String>,
     children: Vec<NodeTree>,
 }
@@ -49,14 +49,15 @@ impl NodeFlat {
     fn into_tree(self, node_by_id: &mut HashMap<i32, NodeFlat>) -> NodeTree {
         NodeTree {
             id: self.id,
-            r#type: self.r#type,
-            subtype: self.subtype,
+            file_id: self.file_id,
+            file_path: self.file_path,
+            node_type: self.node_type,
             title: self.title,
+            subtype: self.subtype,
             url: self.url,
             icon: self.icon,
             created: self.created,
             modified: self.modified,
-            file: self.file,
             original_id: self.original_id,
             children: self
                 .children
@@ -70,31 +71,14 @@ impl NodeFlat {
 async fn get_node_tree(db: &DatabaseConnection) -> eyre::Result<Vec<NodeTree>> {
     let select = Statement::from_string(
         sea_orm::DatabaseBackend::Postgres,
-        "SELECT
-            parent.id,
-            parent.type,
-            parent.subtype,
-            parent.title,
-            parent.url,
-            parent.icon,
-            parent.created,
-            parent.modified,
-            parent.file,
-            parent.original_id,
-            array_remove(array_agg(child.id), NULL) AS children
-        FROM
-            node AS parent
-            LEFT JOIN node AS child ON child.parent_id = parent.id
-        GROUP BY
-            parent.id;"
-            .to_owned(),
+        include_str!("./node_tree.sql").to_owned(),
     );
 
     let mut root_node: Option<NodeFlat> = None;
     let mut nodes_by_id: HashMap<i32, NodeFlat> = HashMap::new();
 
     for node in NodeFlat::find_by_statement(select).all(db).await? {
-        match node.r#type {
+        match node.node_type {
             NodeType::Root => {
                 root_node = Some(node);
             }

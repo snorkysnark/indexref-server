@@ -2,6 +2,6 @@
 members = [
     "migration",
     "entity",
-    #"indexref-serve",
+    "indexref-serve",
     "indexref-sync",
 ]
