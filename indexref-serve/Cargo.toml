@@ -7,13 +7,11 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
-tokio-util = { version = "0.7.8", features = ["io"] }
 futures = "0.3.28"
 
 axum = { version = "0.6.17", features = ["headers"] }
 hyper = "0.14.26"
 tower-http = { version = "0.4.0", features = ["cors"] }
-reqwest = { version = "0.11.18", default-features = false, features = ["json", "rustls-tls"] }
 
 sea-orm = { version = "0.11.3", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres", "postgres-array"] }
 migration = { path = "../migration" }
@@ -24,7 +22,6 @@ chrono = { version = "0.4.24", features = ["serde"] }
 thiserror = "1.0.40"
 eyre = "0.6.8"
 color-eyre = "0.6.2"
-fs-err = { version = "2.9.0", features = ["tokio"] }
 
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
@@ -34,14 +31,8 @@ serde_json = { version = "1.0.96", features = ["preserve_order"] }
 
 dotenvy = "0.15.7"
 
-mime_guess = "2.0.4"
-
 paste = "1.0.12"
 once_cell = "1.17.1"
 
 regex = "1.8.1"
-urlencoding = "2.1.2"
 url = "2.3.1"
-
-[features]
-static_server = ["tower-http/fs"]
