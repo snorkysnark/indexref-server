@@ -30,9 +30,3 @@ serde = { version = "1.0.160", features = ["derive"] }
 serde_json = { version = "1.0.96", features = ["preserve_order"] }
 
 dotenvy = "0.15.7"
-
-paste = "1.0.12"
-once_cell = "1.17.1"
-
-regex = "1.8.1"
-url = "2.3.1"
