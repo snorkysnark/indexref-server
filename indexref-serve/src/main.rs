@@ -33,22 +33,11 @@ async fn main() -> eyre::Result<()> {
 
     Migrator::up(&db, None).await?;
 
-    #[allow(unused_mut)]
-    let mut app = Router::new()
+    let app = Router::new()
         .route("/nodes", get(endpoints::get_node_tree_handler))
         .route("/node/:id", get(endpoints::get_node_full_handler))
         .with_state(AppState { db })
         .layer(CorsLayer::new().allow_origin(cors::Any));
-
-    #[cfg(feature = "static_server")]
-    {
-        use axum::routing::get_service;
-        use tower_http::services::{ServeDir, ServeFile};
-
-        app = app
-            .nest_service("/static", ServeDir::new("static"))
-            .route("/", get_service(ServeFile::new("static/index.html")));
-    }
 
     let socket_addr = SocketAddrV4::new(LOCALHOST, port);
     info!("Serving on http://{socket_addr}");
