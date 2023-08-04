@@ -93,7 +93,8 @@ pub async fn sync_db_with_sources(db: &DatabaseConnection, sources: &SourcesConf
     }
 
     info!("Files to add: {to_add:#?}");
-    // TODO: make this concurrent with tokio::spawn
+    // Make this parallel with tokio::spawn?
+    // Or not? Parallel version seems to be slower
     for summary in to_add.into_iter() {
         let to_index: Vec<NodePresentaion> = transaction!(db => {
             let insered_file = file::ActiveModel {
