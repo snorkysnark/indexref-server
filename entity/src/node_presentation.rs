@@ -27,6 +27,12 @@ pub struct NodePresentaion {
     data: Option<Json>,
 }
 
+impl NodePresentaion {
+    pub fn id(&self) -> i32 {
+        self.id
+    }
+}
+
 impl From<(node::Model, Option<file::Model>)> for NodePresentaion {
     fn from((node, file): (node::Model, Option<file::Model>)) -> Self {
         NodePresentaion {

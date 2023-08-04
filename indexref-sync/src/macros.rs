@@ -1,14 +1,13 @@
 macro_rules! transaction {
-    ($db:expr => $block:tt) => {
-        {
-            use sea_orm::TransactionTrait;
-            let txn = $db.begin().await?;
+    ($db:expr => $block:tt) => {{
+        use sea_orm::TransactionTrait;
+        let txn = $db.begin().await?;
 
-            $block
+        let return_value = $block;
 
-            txn.commit().await?;
-        }
-    };
+        txn.commit().await?;
+        return_value
+    }};
 }
 
 pub(crate) use transaction;
