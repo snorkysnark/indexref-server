@@ -5,4 +5,7 @@ pub mod prelude;
 pub mod file;
 pub mod node;
 
+mod node_presentation;
 pub mod types;
+
+pub use node_presentation::NodePresentaion;
