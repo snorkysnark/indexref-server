@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 use config::SourcesConfig;
 use migration::{Migrator, MigratorTrait};
+use opensearch::OpenSearch;
 use sea_orm::Database;
 use tracing_subscriber::EnvFilter;
 
@@ -28,7 +29,8 @@ async fn main() -> eyre::Result<()> {
     let db = Database::connect(&db_url).await?;
     Migrator::up(&db, None).await?;
 
-    file_sync::sync_db_with_sources(&db, &sources).await?;
+    let oss = OpenSearch::default();
+    file_sync::sync_db_with_sources(&db, &oss, &sources).await?;
 
     Ok(())
 }

@@ -7,11 +7,13 @@ use std::{
     path::PathBuf,
 };
 
+use ::opensearch::OpenSearch;
 use entity::{file, types::FileType, NodePresentaion};
 use eyre::Result;
 use futures::{future, TryStreamExt};
 use log::info;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait};
+use serde_json::json;
 use tryvial::try_block;
 
 use crate::{config::SourcesConfig, macros::transaction};
@@ -63,7 +65,11 @@ fn find_actual_files(sources: &SourcesConfig) -> Result<HashSet<FileSummary>> {
     Ok(result?)
 }
 
-pub async fn sync_db_with_sources(db: &DatabaseConnection, sources: &SourcesConfig) -> Result<()> {
+pub async fn sync_db_with_sources(
+    db: &DatabaseConnection,
+    oss: &OpenSearch,
+    sources: &SourcesConfig,
+) -> Result<()> {
     let indexed_files = get_indexed_files(db).await?;
     let actual_files = find_actual_files(sources)?;
 
@@ -87,16 +93,16 @@ pub async fn sync_db_with_sources(db: &DatabaseConnection, sources: &SourcesConf
         for id in to_delete.iter() {
             file::Entity::delete_by_id(*id).exec(db).await?;
         }
+        for id in to_delete {
+            opensearch::delete_by_query(oss, "nodes", json!({ "match": { "file_id": id } })).await?;
+        }
     });
-    for id in to_delete {
-        opensearch::delete_by_file_id(id).await?;
-    }
 
     info!("Files to add: {to_add:#?}");
     // Make this parallel with tokio::spawn?
     // Or not? Parallel version seems to be slower
     for summary in to_add.into_iter() {
-        let to_index: Vec<NodePresentaion> = transaction!(db => {
+        transaction!(db => {
             let insered_file = file::ActiveModel {
                 source_type: Set(summary.file_type),
                 path: Set(summary.path.clone().try_into()?),
@@ -106,13 +112,13 @@ pub async fn sync_db_with_sources(db: &DatabaseConnection, sources: &SourcesConf
             .insert(db)
             .await?;
 
-            node_importer::import_from_file(db, summary.file_type, &summary.path, insered_file.id).await?
+            let to_index: Vec<NodePresentaion> = node_importer::import_from_file(db, summary.file_type, &summary.path, insered_file.id).await?
                 .into_iter()
                 .map(|node| (node, Some(insered_file.clone())).into())
-                .collect()
-        });
+                .collect();
 
-        self::opensearch::add_documents(to_index).await?;
+            self::opensearch::add_documents(oss, to_index).await?;
+        });
     }
 
     Ok(())
