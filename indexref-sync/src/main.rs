@@ -1,32 +1,30 @@
-mod config;
+mod env_config;
 mod ext;
 mod file_sync;
 mod macros;
+mod sources_config;
 
-use std::path::PathBuf;
-
-use config::SourcesConfig;
+use env_config::EnvConfig;
 use migration::{Migrator, MigratorTrait};
 use opensearch::OpenSearch;
 use sea_orm::Database;
-use tracing_subscriber::EnvFilter;
+use sources_config::SourcesConfig;
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     color_eyre::install()?;
+
+    dotenvy::dotenv().ok();
+    let config = EnvConfig::from_env()?;
+
     tracing_subscriber::fmt()
         // Filter what crates emit logs
-        .with_env_filter(EnvFilter::try_new("indexref_sync,sea_orm")?)
+        .with_env_filter(config.env_filter()?)
         .init();
 
-    dotenv::dotenv().ok();
-    let db_url = std::env::var("DATABASE_URL")?;
-    let config_path: PathBuf = std::env::var("INDEXREF_CONFIG")
-        .unwrap_or_else(|_| "config.json".to_owned())
-        .into();
-    let sources: SourcesConfig = serde_json::from_str(&std::fs::read_to_string(&config_path)?)?;
+    let sources: SourcesConfig = serde_json::from_str(&std::fs::read_to_string(config.sources())?)?;
 
-    let db = Database::connect(&db_url).await?;
+    let db = Database::connect(config.db()).await?;
     Migrator::up(&db, None).await?;
 
     let oss = OpenSearch::default();
