@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct SourcesConfig {
@@ -28,5 +28,13 @@ impl SourcesConfig {
 
     pub fn onetab(&self) -> &[PathBuf] {
         self.onetab.as_ref()
+    }
+
+    pub fn iter_paths(&self) -> impl Iterator<Item = &PathBuf> {
+        self.telegram
+            .iter()
+            .chain(self.single_file_z.iter())
+            .chain(self.scrapbook.iter())
+            .chain(self.onetab.iter())
     }
 }
