@@ -16,7 +16,7 @@ use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrai
 use serde_json::json;
 use tryvial::try_block;
 
-use crate::{config::SourcesConfig, macros::transaction};
+use crate::{sources_config::SourcesConfig, macros::transaction};
 
 use self::file_finder::FoundFile;
 

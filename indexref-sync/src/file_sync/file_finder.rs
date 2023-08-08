@@ -4,7 +4,7 @@ use entity::types::FileType;
 use walkdir::WalkDir;
 
 use crate::{
-    config::SourcesConfig,
+    sources_config::SourcesConfig,
     ext::{OptionOsStrExt, ResultExt},
 };
 
