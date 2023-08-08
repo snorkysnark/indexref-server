@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "indexref-sync",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/indexref-sync",
+            "cwd": "${workspaceFolder}",
+            "args": []
+        }
+    ]
+}
