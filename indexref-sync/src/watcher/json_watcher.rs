@@ -15,7 +15,7 @@ pub struct JsonWatcher {
 impl JsonWatcher {
     pub fn new(file_path: PathBuf) -> Result<Self> {
         Ok(Self {
-            file_watcher: FileWatcher::new(&file_path)?,
+            file_watcher: FileWatcher::new(&file_path, false)?,
             file_path,
         })
     }

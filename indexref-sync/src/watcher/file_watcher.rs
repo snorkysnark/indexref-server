@@ -5,23 +5,28 @@ use std::{
 
 use eyre::{ContextCompat, Result};
 use notify::RecursiveMode;
-use notify_debouncer_mini::{new_debouncer, DebounceEventResult};
+use notify_debouncer_mini::{new_debouncer, DebounceEventResult, DebouncedEventKind};
 use tracing::error;
 
 pub struct FileWatcher {
     file_path: PathBuf,
     parent: PathBuf,
+    allow_continuous: bool,
 }
 
 impl FileWatcher {
-    pub fn new(file_path: impl AsRef<Path>) -> Result<Self> {
+    pub fn new(file_path: impl AsRef<Path>, allow_continuous: bool) -> Result<Self> {
         let file_path = std::fs::canonicalize(file_path.as_ref())?;
         let parent = file_path
             .parent()
             .context("Path has no parent dir")?
             .to_owned();
 
-        Ok(Self { file_path, parent })
+        Ok(Self {
+            file_path,
+            parent,
+            allow_continuous,
+        })
     }
 
     pub async fn watch(self, mut on_change: impl FnMut() -> ()) -> Result<()> {
@@ -34,7 +39,10 @@ impl FileWatcher {
                 Ok(events) => {
                     if events
                         .iter()
-                        .find(|event| event.path == self.file_path)
+                        .find(|event| {
+                            event.path == self.file_path
+                                && (self.allow_continuous || event.kind == DebouncedEventKind::Any)
+                        })
                         .is_some()
                     {
                         if let Err(err) = tx.blocking_send(()) {
