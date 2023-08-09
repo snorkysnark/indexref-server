@@ -1,9 +1,7 @@
-use std::{collections::HashSet, path::PathBuf, time::Duration};
+use std::{collections::HashSet, path::PathBuf};
 
-use eyre::Result;
 use notify::{RecommendedWatcher, RecursiveMode};
-use notify_debouncer_mini::{new_debouncer, DebounceEventResult, Debouncer};
-use tokio::sync::mpsc::Receiver;
+use notify_debouncer_mini::Debouncer;
 use tracing::error;
 
 pub struct MultiWatcher {
@@ -11,29 +9,14 @@ pub struct MultiWatcher {
     watcher_paths: HashSet<PathBuf>,
 }
 
-pub fn create_multi_watcher() -> Result<(MultiWatcher, Receiver<DebounceEventResult>)> {
-    let (tx, rx) = tokio::sync::mpsc::channel(100);
-
-    let debouncer = new_debouncer(
-        Duration::from_secs(1),
-        None,
-        move |result: DebounceEventResult| {
-            if let Err(err) = tx.blocking_send(result) {
-                error!("{err}")
-            }
-        },
-    )?;
-
-    Ok((
+impl MultiWatcher {
+    pub fn new(debouncer: Debouncer<RecommendedWatcher>) -> Self {
         MultiWatcher {
             debouncer,
             watcher_paths: HashSet::new(),
-        },
-        rx,
-    ))
-}
+        }
+    }
 
-impl MultiWatcher {
     pub fn update_paths(&mut self, new_paths: HashSet<PathBuf>) {
         let to_delete: Vec<PathBuf> = self
             .watcher_paths

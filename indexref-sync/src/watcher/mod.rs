@@ -4,4 +4,4 @@ mod multi_watcher;
 
 pub use file_watcher::FileWatcher;
 pub use json_watcher::JsonWatcher;
-pub use multi_watcher::{create_multi_watcher, MultiWatcher};
+pub use multi_watcher::MultiWatcher;
