@@ -13,7 +13,7 @@ axum = { version = "0.6.17", features = ["headers"] }
 hyper = "0.14.26"
 tower-http = { version = "0.4.0", features = ["cors"] }
 
-sea-orm = { version = "0.11.3", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres", "postgres-array"] }
+sea-orm = { version = "0.12.2", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres", "postgres-array"] }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
 

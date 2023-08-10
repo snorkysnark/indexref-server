@@ -20,14 +20,15 @@ async fn main() -> Result<()> {
 
     tracing_subscriber::fmt()
         // Filter what crates emit logs
-        .with_env_filter(config.env_filter()?)
+        // .with_env_filter(config.env_filter()?)
+        .with_max_level(tracing::Level::DEBUG)
         .init();
 
     let db = Database::connect(config.db()).await?;
     let oss = OpenSearch::default();
 
     Migrator::up(&db, None).await?;
-    watcher::sync_and_watch(config.sources().to_owned(), db, oss)?;
+    watcher::sync_and_watch(config.sources().to_owned(), db, oss).await?;
 
     Ok(())
 }
