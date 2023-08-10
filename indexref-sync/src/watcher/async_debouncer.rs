@@ -5,12 +5,10 @@ use std::{
 };
 
 use eyre::ContextCompat;
-use futures::Stream;
 use notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_mini::{new_debouncer, DebounceEventResult, DebouncedEventKind, Debouncer};
 use serde::de::DeserializeOwned;
 use tokio::sync::{broadcast, mpsc};
-use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use tracing::error;
 use tryvial::try_block;
 
@@ -36,7 +34,7 @@ pub fn new_async_debouncer(
     Ok((debouncer, rx))
 }
 
-fn ok_log_errors<T, E>(result: Result<T, Vec<E>>) -> Option<T>
+pub fn ok_log_errors<T, E>(result: Result<T, Vec<E>>) -> Option<T>
 where
     E: Display,
 {
