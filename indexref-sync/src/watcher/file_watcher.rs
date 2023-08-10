@@ -1,65 +1,46 @@
-use std::{
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{path::Path, time::Duration};
 
 use eyre::{ContextCompat, Result};
-use notify::RecursiveMode;
-use notify_debouncer_mini::{new_debouncer, DebounceEventResult, DebouncedEventKind};
-use tracing::error;
+use notify::{RecommendedWatcher, RecursiveMode};
+use notify_debouncer_mini::{new_debouncer, DebounceEventResult, DebouncedEventKind, Debouncer};
+use tracing::debug;
 
-pub struct FileWatcher {
-    file_path: PathBuf,
-    parent: PathBuf,
-    allow_continuous: bool,
-}
+use crate::watcher::ok_log_errors;
 
-impl FileWatcher {
-    pub fn new(file_path: impl AsRef<Path>, allow_continuous: bool) -> Result<Self> {
-        let file_path = std::fs::canonicalize(file_path.as_ref())?;
-        let parent = file_path
+pub fn new_file_watcher(
+    timeout: Duration,
+    tick_rate: Option<Duration>,
+    file_path: impl AsRef<Path>,
+    mut callback: impl FnMut() -> () + Send + 'static,
+) -> Result<Debouncer<RecommendedWatcher>> {
+    let file_path = std::fs::canonicalize(file_path.as_ref())?;
+
+    let mut debouncer = new_debouncer(timeout, tick_rate, {
+        let file_path = file_path.clone();
+        move |result: DebounceEventResult| {
+            debug!("{result:#?}");
+            if let Some(events) = ok_log_errors(result) {
+                if events
+                    .iter()
+                    .find(|event| event.kind == DebouncedEventKind::Any && event.path == file_path)
+                    .is_some()
+                {
+                    callback();
+                }
+            }
+        }
+    })?;
+    println!(
+        "Watching {}",
+        file_path
             .parent()
             .context("Path has no parent dir")?
-            .to_owned();
+            .display()
+    );
+    debouncer.watcher().watch(
+        file_path.parent().context("Path has no parent dir")?,
+        RecursiveMode::NonRecursive,
+    )?;
 
-        Ok(Self {
-            file_path,
-            parent,
-            allow_continuous,
-        })
-    }
-
-    pub async fn watch(self, mut on_change: impl FnMut() -> ()) -> Result<()> {
-        let (tx, mut rx) = tokio::sync::mpsc::channel(100);
-
-        let mut debouncer = new_debouncer(
-            Duration::from_secs(1),
-            None,
-            move |result: DebounceEventResult| match result {
-                Ok(events) => {
-                    if events
-                        .iter()
-                        .find(|event| {
-                            event.path == self.file_path
-                                && (self.allow_continuous || event.kind == DebouncedEventKind::Any)
-                        })
-                        .is_some()
-                    {
-                        if let Err(err) = tx.blocking_send(()) {
-                            error!("{err}")
-                        }
-                    }
-                }
-                Err(errors) => errors.iter().for_each(|err| error!("{err}")),
-            },
-        )?;
-        debouncer
-            .watcher()
-            .watch(&self.parent, RecursiveMode::NonRecursive)?;
-
-        while let Some(_) = rx.recv().await {
-            on_change();
-        }
-        Ok(())
-    }
+    Ok(debouncer)
 }

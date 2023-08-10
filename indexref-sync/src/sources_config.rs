@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SourcesConfig {
     #[serde(default)]
     telegram: Vec<PathBuf>,

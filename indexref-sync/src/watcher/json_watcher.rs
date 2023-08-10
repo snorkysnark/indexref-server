@@ -1,40 +1,34 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use eyre::Result;
+use notify::RecommendedWatcher;
+use notify_debouncer_mini::Debouncer;
 use serde::de::DeserializeOwned;
 use tracing::error;
 use tryvial::try_block;
 
-use super::FileWatcher;
+use super::file_watcher::new_file_watcher;
 
-pub struct JsonWatcher {
+pub fn new_json_watcher<T: DeserializeOwned>(
+    timeout: Duration,
+    tick_rate: Option<Duration>,
     file_path: PathBuf,
-    file_watcher: FileWatcher,
-}
-
-impl JsonWatcher {
-    pub fn new(file_path: PathBuf) -> Result<Self> {
-        Ok(Self {
-            file_watcher: FileWatcher::new(&file_path, false)?,
-            file_path,
-        })
-    }
-
-    pub async fn watch<T>(self, mut on_change: impl FnMut(T) -> ()) -> Result<()>
-    where
-        T: DeserializeOwned,
-    {
-        let mut notify_change = || {
+    mut callback: impl FnMut(T) -> () + Send + 'static,
+) -> Result<Debouncer<RecommendedWatcher>> {
+    let mut notify_change = {
+        let file_path = file_path.clone();
+        move || {
             let result: Result<T> = try_block! {
-                serde_json::from_str(&std::fs::read_to_string(&self.file_path)?)?
+                serde_json::from_str(&std::fs::read_to_string(&file_path)?)?
             };
             match result {
-                Ok(value) => on_change(value),
+                Ok(value) => callback(value),
                 Err(err) => error!("{err}"),
             }
-        };
+        }
+    };
 
-        notify_change();
-        self.file_watcher.watch(notify_change).await
-    }
+    notify_change();
+    let debouncer = new_file_watcher(timeout, tick_rate, &file_path, notify_change)?;
+    Ok(debouncer)
 }
