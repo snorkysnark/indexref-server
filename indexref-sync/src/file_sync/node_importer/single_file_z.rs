@@ -5,7 +5,7 @@ use eyre::{Context, ContextCompat, Result};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use scraper::{Html, Selector};
-use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 
 use entity::{node, types::NodeType};
 
@@ -16,7 +16,7 @@ static SEL_CANONICAL_LINK: Lazy<Selector> =
     Lazy::new(|| Selector::parse(r#"link[rel="canonical"]"#).unwrap());
 
 pub async fn import_from_file(
-    db: &DatabaseConnection,
+    db: &impl ConnectionTrait,
     file_path: &Path,
     file_id: i32,
 ) -> Result<Vec<node::Model>> {

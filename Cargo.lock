@@ -1578,6 +1578,7 @@ dependencies = [
 name = "indexref-sync"
 version = "0.1.0"
 dependencies = [
+ "camino",
  "chrono",
  "color-eyre",
  "dotenvy",

@@ -12,7 +12,7 @@ use eyre::{eyre, ContextCompat, Result};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use scraper::{Html, Selector};
-use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 use url::Url;
 
 use entity::{node, types::NodeType};
@@ -52,7 +52,7 @@ fn extract_redirect_path(index_html_path: &Path) -> Result<PathBuf> {
 }
 
 async fn insert_one(
-    db: &DatabaseConnection,
+    db: &impl ConnectionTrait,
     file_id: i32,
     scrapbook_dir: &Path,
     description: RdfDescription,
@@ -118,7 +118,7 @@ async fn insert_one(
 }
 
 pub async fn import_from_file(
-    db: &DatabaseConnection,
+    db: &impl ConnectionTrait,
     file_path: &Path,
     file_id: i32,
 ) -> Result<Vec<node::Model>> {

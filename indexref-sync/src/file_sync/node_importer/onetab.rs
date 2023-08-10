@@ -4,7 +4,7 @@ use chrono::NaiveDateTime;
 use eyre::Result;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 use serde::Deserialize;
 
 use entity::{node, types::NodeType};
@@ -35,7 +35,7 @@ struct OnetabString {
 }
 
 pub async fn import_from_file(
-    db: &DatabaseConnection,
+    db: &impl ConnectionTrait,
     file_path: &Path,
     file_id: i32,
 ) -> Result<Vec<node::Model>> {

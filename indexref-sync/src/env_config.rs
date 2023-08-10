@@ -40,5 +40,5 @@ fn default_sources() -> PathBuf {
 }
 
 fn default_log_filter() -> String {
-    "indexref_sync,sea_orm".to_owned()
+    "indexref_sync,sea_orm,sqlx".to_owned()
 }

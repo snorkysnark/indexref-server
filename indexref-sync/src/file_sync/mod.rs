@@ -8,23 +8,44 @@ use std::{
 };
 
 use ::opensearch::OpenSearch;
+use camino::FromPathBufError;
 use entity::{file, types::FileType, NodePresentaion};
 use eyre::Result;
 use futures::{future, TryStreamExt};
 use log::info;
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, EntityTrait};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, DatabaseConnection, DbErr, EntityTrait, TransactionTrait,
+};
 use serde_json::json;
+use thiserror::Error;
 use tryvial::try_block;
 
-use crate::{sources_config::SourcesConfig, macros::transaction};
+use crate::sources_config::SourcesConfig;
 
-use self::file_finder::FoundFile;
+use self::{
+    file_finder::FoundFile,
+    opensearch::{BulkApiError, DeleteByQueryError},
+};
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 struct FileSummary {
     file_type: FileType,
     path: PathBuf,
     hash: String,
+}
+
+#[derive(Debug, Error)]
+enum SyncError {
+    #[error("db: {0}")]
+    Db(#[from] DbErr),
+    #[error("delete_by_query: {0}")]
+    DeleteByQuery(#[from] DeleteByQueryError),
+    #[error("bulk_api: {0}")]
+    Bulk(#[from] BulkApiError),
+    #[error("path convert: {0}")]
+    NonUtf8Path(#[from] FromPathBufError),
+    #[error("{0}")]
+    Other(#[from] eyre::Report),
 }
 
 async fn get_indexed_files(db: &DatabaseConnection) -> Result<HashMap<FileSummary, i32>> {
@@ -89,36 +110,54 @@ pub async fn sync_db_with_sources(
 
     info!("Files to delete: {to_delete:?}");
     // Remove deleted files from database
-    transaction!(db => {
-        for id in to_delete.iter() {
-            file::Entity::delete_by_id(*id).exec(db).await?;
-        }
-        for id in to_delete {
-            opensearch::delete_by_query(oss, "nodes", json!({ "match": { "file_id": id } })).await?;
-        }
-    });
+    db.transaction::<_, _, SyncError>(|txn| {
+        let oss = oss.clone();
+        Box::pin(async move {
+            for id in to_delete.iter() {
+                file::Entity::delete_by_id(*id).exec(txn).await?;
+            }
+            for id in to_delete {
+                opensearch::delete_by_query(&oss, "nodes", json!({ "match": { "file_id": id } }))
+                    .await?
+            }
+
+            Ok(())
+        })
+    })
+    .await?;
 
     info!("Files to add: {to_add:#?}");
     // Make this parallel with tokio::spawn?
     // Or not? Parallel version seems to be slower
     for summary in to_add.into_iter() {
-        transaction!(db => {
-            let insered_file = file::ActiveModel {
-                source_type: Set(summary.file_type),
-                path: Set(summary.path.clone().try_into()?),
-                hash: Set(summary.hash),
-                ..Default::default()
-            }
-            .insert(db)
-            .await?;
+        db.transaction::<_, _, SyncError>(|txn| {
+            let oss = oss.clone();
+            Box::pin(async move {
+                let insered_file = file::ActiveModel {
+                    source_type: Set(summary.file_type),
+                    path: Set(summary.path.clone().try_into()?),
+                    hash: Set(summary.hash),
+                    ..Default::default()
+                }
+                .insert(txn)
+                .await?;
 
-            let to_index: Vec<NodePresentaion> = node_importer::import_from_file(db, summary.file_type, &summary.path, insered_file.id).await?
+                let to_index: Vec<NodePresentaion> = node_importer::import_from_file(
+                    txn,
+                    summary.file_type,
+                    &summary.path,
+                    insered_file.id,
+                )
+                .await?
                 .into_iter()
                 .map(|node| (node, Some(insered_file.clone())).into())
                 .collect();
 
-            self::opensearch::add_documents(oss, to_index).await?;
-        });
+                self::opensearch::add_documents(&oss, to_index).await?;
+                Ok(())
+            })
+        })
+        .await?;
     }
 
     Ok(())

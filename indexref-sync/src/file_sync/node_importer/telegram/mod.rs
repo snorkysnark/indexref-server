@@ -4,13 +4,13 @@ use std::{fs, path::Path};
 
 use chrono::NaiveDateTime;
 use eyre::Result;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 
 use self::def::{Chat, ChatMetadata, Message, MessageExport};
 use entity::{node, types::NodeType};
 
 async fn insert_message(
-    db: &DatabaseConnection,
+    db: &impl ConnectionTrait,
     file_id: i32,
     metadata: ChatMetadata,
     message: Message,
@@ -67,7 +67,7 @@ async fn insert_message(
 }
 
 pub async fn import_from_file(
-    db: &DatabaseConnection,
+    db: &impl ConnectionTrait,
     file_path: &Path,
     file_id: i32,
 ) -> Result<Vec<node::Model>> {

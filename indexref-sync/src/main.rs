@@ -20,8 +20,7 @@ async fn main() -> Result<()> {
 
     tracing_subscriber::fmt()
         // Filter what crates emit logs
-        // .with_env_filter(config.env_filter()?)
-        .with_max_level(tracing::Level::DEBUG)
+        .with_env_filter(config.env_filter()?)
         .init();
 
     let db = Database::connect(config.db()).await?;

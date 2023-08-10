@@ -7,10 +7,10 @@ use std::path::Path;
 
 use entity::{node, types::FileType};
 use eyre::{Context, Result};
-use sea_orm::DatabaseConnection;
+use sea_orm::ConnectionTrait;
 
 pub async fn import_from_file(
-    db: &DatabaseConnection,
+    db: &impl ConnectionTrait,
     file_type: FileType,
     file_path: &Path,
     id: i32,
