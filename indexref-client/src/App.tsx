@@ -1,54 +1,35 @@
-import { createEffect, createSignal, onCleanup, Show } from "solid-js";
-import NodeTree from "./NodeTree";
-import { ImSearch } from 'solid-icons/im'
-import { getSet } from "./signals/getset";
-import { createNodes } from "./signals/server";
-import { selectNextNode, selectPrevNode } from "./treeNavigation";
-import JsonView from "./JsonView";
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
 
-export default function App() {
-    const [nodes] = createNodes();
-    const selectedId = getSet(createSignal<number>());
-
-    createEffect(() => console.log(nodes()));
-
-    function onKeyDown(event: KeyboardEvent) {
-        if (!nodes()) return;
-
-        switch (event.key) {
-            case "ArrowUp":
-                event.preventDefault();
-                selectPrevNode(nodes(), selectedId);
-                break;
-            case "ArrowDown":
-                event.preventDefault();
-                selectNextNode(nodes(), selectedId);
-                break;
-        }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    onCleanup(() => window.removeEventListener("keydown", onKeyDown));
+function App() {
+    const [count, setCount] = useState(0)
 
     return (
-        <div class="flex h-screen">
-            <div class="w-1/2 overflow-hidden">
-                <div class="h-10 w-full p-1 flex items-center shadow-md">
-                    <ImSearch class="mx-1" />
-                    <input class="bg-transparent border-2 border-gray-200 shadow-inner w-full h-full" />
-                </div>
-                <div class="overflow-y-scroll pb-4 h-full">
-                    {
-                        /*<Show when={nodes()}>
-                            <NodeTree nodes={nodes()} selectedId={selectedId} />
-                        </Show>*/
-                    }
-                </div>
+        <>
+            <div>
+                <a href="https://vitejs.dev" target="_blank">
+                    <img src={viteLogo} className="logo" alt="Vite logo" />
+                </a>
+                <a href="https://react.dev" target="_blank">
+                    <img src={reactLogo} className="logo react" alt="React logo" />
+                </a>
             </div>
-            <div class="w-1/2 overflow-y-scroll">
-                <Show when={selectedId.get()}>
-                    <JsonView value={nodes().nodeById.get(selectedId.get())} />
-                </Show>
+            <h1>Vite + React</h1>
+            <div className="card">
+                <button onClick={() => setCount((count) => count + 1)}>
+                    count is {count}
+                </button>
+                <p>
+                    Edit <code>src/App.tsx</code> and save to test HMR
+                </p>
             </div>
-        </div>
-    );
+            <p className="read-the-docs">
+                Click on the Vite and React logos to learn more
+            </p>
+        </>
+    )
 }
+
+export default App

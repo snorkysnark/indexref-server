@@ -5,11 +5,10 @@ mod err;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
 use axum::{routing::get, Router};
+use config::Config;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 use tracing::info;
-
-use config::Config;
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -31,10 +30,14 @@ async fn main() -> eyre::Result<()> {
 
     Migrator::up(&db, None).await?;
 
+    // let proxy_service = tower::service_fn(|req: Request<_>|)
+
     let app = Router::new()
         .route("/nodes", get(endpoints::get_node_tree_handler))
         .route("/node/:id", get(endpoints::get_node_full_handler))
-        .with_state(AppState { db });
+        .with_state(AppState { db })
+        .route("/", get(endpoints::index_html))
+        .nest("/static", endpoints::static_asset_router());
 
     let socket_addr = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), config.port());
     info!("Serving on http://{socket_addr}");

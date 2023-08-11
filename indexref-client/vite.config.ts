@@ -1,26 +1,18 @@
-import { defineConfig } from "vite";
-import solid from "vite-plugin-solid";
-import * as path from "path";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
 
+// https://vitejs.dev/config/
 export default defineConfig({
     base: "/static/",
 
-    plugins: [solid()],
+    plugins: [react()],
     server: {
         port: 3000,
     },
     build: {
-        target: "esnext",
-    },
-
-    resolve: {
-        alias: {
-            src: path.resolve("src/"),
-        },
-    },
-    css: {
-        modules: {
-            localsConvention: "camelCase",
-        },
-    },
-});
+        manifest: true,
+        rollupOptions: {
+            input: 'src/main.tsx'
+        }
+    }
+})
