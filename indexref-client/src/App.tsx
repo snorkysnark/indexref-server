@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useQuery } from "@tanstack/react-query";
+import { TreeResponse } from "./api";
+import NodeTree from "./NodeTree";
+import { useState } from "react";
 
 function App() {
-    const [count, setCount] = useState(0)
+    const { data, isSuccess } = useQuery({
+        queryKey: ["nodes"],
+        queryFn: async () => {
+            const res = await fetch("/nodes");
+            return (await res.json()) as TreeResponse;
+        },
+    });
+    const [selectedId, setSelectedId] = useState<number | null>(null);
 
     return (
-        <>
-            <div>
-                <a href="https://vitejs.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo" />
-                </a>
-                <a href="https://react.dev" target="_blank">
-                    <img src={reactLogo} className="logo react" alt="React logo" />
-                </a>
+        <div className="flex h-screen">
+            <div className="left-0 w-1/2 overflow-y-scroll">
+                {isSuccess && (
+                    <NodeTree
+                        nodes={data.value}
+                        selectedId={selectedId}
+                        selectId={setSelectedId}
+                    />
+                )}
             </div>
-            <h1>Vite + React</h1>
-            <div className="card">
-                <button onClick={() => setCount((count) => count + 1)}>
-                    count is {count}
-                </button>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
-            </div>
-            <p className="read-the-docs">
-                Click on the Vite and React logos to learn more
-            </p>
-        </>
-    )
+            <div className="right-0 w-1/2 overflow-y-scroll"></div>
+        </div>
+    );
 }
 
-export default App
+export default App;

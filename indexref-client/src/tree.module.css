@@ -1,0 +1,29 @@
+ul.dottedTree {
+  padding-left: 1em;
+}
+
+li.dottedTree {
+  padding-left: 1em;
+  border: 1px dotted black;
+  border-width: 0 0 1px 1px;
+}
+
+li.container {
+  border-bottom: 0px;
+}
+
+li.dottedTree p {
+  margin: 0;
+  position: relative;
+  top: 0.5em;
+}
+
+li.dottedTree ul.dottedTree {
+  border-top: 1px dotted black;
+  margin-left: -1em;
+  padding-left: 1.5em;
+}
+ul.dottedTree li.dottedTree:last-child ul.dottedTree {
+  border-left: 1px solid white;
+  margin-left: -17px;
+}
